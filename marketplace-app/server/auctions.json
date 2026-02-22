@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "name": "Genesis Architect",
+        "role": "Smart Design & Logic Expert",
+        "highestBid": 14.5,
+        "currency": "ETH",
+        "timeLeft": "02:14:59",
+        "bidCount": 52,
+        "image": "https://images.unsplash.com/photo-1614728263952-84ea206f99b6?w=800",
+        "highestBidder": "@whale_watcher",
+        "bids": []
+    },
+    {
+        "id": 2,
+        "name": "The Cryptographer",
+        "role": "Private Security & Data Specialist",
+        "highestBid": 2100,
+        "currency": "SOL",
+        "timeLeft": "05:02:10",
+        "bidCount": 38,
+        "image": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800",
+        "highestBidder": "@merkle_tree",
+        "bids": []
+    },
+    {
+        "id": 3,
+        "name": "Market Oracle",
+        "role": "Smart Analytics & Prediction",
+        "highestBid": 450.25,
+        "currency": "STORY",
+        "timeLeft": "00:42:15",
+        "bidCount": 124,
+        "image": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800",
+        "highestBidder": "@alpha_trader",
+        "bids": []
+    },
+    {
+        "id": 4,
+        "name": "Protocol Sentinel",
+        "role": "Active Safety & Threat Monitor",
+        "highestBid": 5200,
+        "currency": "USDC",
+        "timeLeft": "12:00:00",
+        "bidCount": 21,
+        "image": "https://images.unsplash.com/photo-1558494949-ef0109159d5e?w=800",
+        "highestBidder": "@sec_warden",
+        "bids": []
+    }
+]

@@ -1,0 +1,91 @@
+.rankings-table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-card);
+}
+
+.rankings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 14px;
+}
+
+.rankings-table th {
+    text-align: right;
+    padding: 16px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.rankings-table th:first-child {
+    text-align: left;
+}
+
+.rankings-table td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: right;
+    color: var(--text-primary);
+}
+
+.rankings-table td:first-child {
+    text-align: left;
+}
+
+.rankings-table tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.rankings-table tr:last-child td {
+    border-bottom: none;
+}
+
+.agent-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rank-index {
+    color: var(--text-secondary);
+    width: 20px;
+}
+
+.table-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    /* Rounded square like the reference */
+    overflow: hidden;
+}
+
+.table-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.agent-name-cell {
+    font-weight: 600;
+    font-family: var(--font-main);
+}
+
+.positive-change {
+    color: #27c93f;
+}
+
+.negative-change {
+    color: #ff4d4d;
+}
+
+.eth-icon {
+    font-size: 12px;
+    margin-left: 4px;
+    color: var(--text-secondary);
+}
