@@ -1,9 +1,21 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const mongoose = require('mongoose');
+const Agent = require('./models/Agent');
+
+const MONGO_URI = process.env.MONGO_URI;
+if (MONGO_URI && !MONGO_URI.includes('<db_password>')) {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log('✅ Connected to MongoDB Atlas'))
+        .catch(err => console.error('❌ MongoDB Connection Error:', err));
+} else {
+    console.warn('⚠️ MongoDB connection string missing or password not set in .env');
+}
 
 const app = express();
 const PORT = 3001;
@@ -41,17 +53,25 @@ const write = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 
 // --- API ---
 
 // AGENTS
-app.get('/api/agents', (req, res) => res.json(read(AGENTS_FILE)));
+app.get('/api/agents', async (req, res) => {
+    try {
+        // Fetch from MongoDB, officially sorted by latest
+        const agents = await Agent.find().sort({ id: -1 });
+        res.json(agents);
+    } catch (err) {
+        console.error("Failed to fetch agents:", err);
+        res.status(500).json({ error: 'Database fetch failed' });
+    }
+});
 
-app.post('/api/agents', upload.single('image'), (req, res) => {
-    const agents = read(AGENTS_FILE);
+app.post('/api/agents', upload.single('image'), async (req, res) => {
     const {
         id, name, role, price, currency, description, owner, github, model,
         version, contextWindow, architecture, framework, apiDependencies,
         inferenceService, license, tags, videoLink, website, discord, telegram, docs
     } = req.body;
 
-    const newAgent = {
+    const newAgentData = {
         id: id ? (typeof id === 'string' ? parseInt(id) : id) : Date.now(),
         name,
         role,
@@ -77,43 +97,42 @@ app.post('/api/agents', upload.single('image'), (req, res) => {
         docs,
         image: req.file ? `http://localhost:${PORT}/uploads/${req.file.filename}` : '/assets/agent1.png',
         status: 'Active',
-        dateCreated: new Date().toISOString()
+        dateCreated: new Date()
     };
 
-    agents.unshift(newAgent);
-    write(AGENTS_FILE, agents);
-
     try {
-        const forum = read(FORUM_FILE);
-        const newPost = {
-            id: 'auto-' + Date.now().toString(),
-            author: owner,
-            content: `I just deployed a new entity to the network: ${name}.\n\nRole: ${role}\nPrice: ${price} ${currency || 'ETH'}\n\nInitialize acquisition below.`,
-            agentId: newAgent.id.toString(),
-            likes: 0,
-            comments: [],
-            timestamp: new Date().toISOString()
-        };
-        forum.unshift(newPost);
-        write(FORUM_FILE, forum);
-    } catch (e) {
-        console.error("Failed to auto-post to forum", e);
-    }
+        const newAgent = await Agent.create(newAgentData);
 
-    res.status(201).json(newAgent);
-});
-
-app.delete('/api/agents/:id', (req, res) => {
-    try {
-        const agents = read(AGENTS_FILE);
-        const initialCount = agents.length;
-        const updated = agents.filter(a => a.id.toString() !== req.params.id.toString());
-
-        if (updated.length === initialCount) {
-            return res.status(404).json({ error: 'Agent not found in registry' });
+        try {
+            const forum = read(FORUM_FILE);
+            const newPost = {
+                id: 'auto-' + Date.now().toString(),
+                author: owner,
+                content: `I just deployed a new entity to the network: ${name}.\n\nRole: ${role}\nPrice: ${price} ${currency || 'ETH'}\n\nInitialize acquisition below.`,
+                agentId: newAgent.id.toString(),
+                likes: 0,
+                comments: [],
+                timestamp: new Date().toISOString()
+            };
+            forum.unshift(newPost);
+            write(FORUM_FILE, forum);
+        } catch (e) {
+            console.error("Failed to auto-post to forum", e);
         }
 
-        write(AGENTS_FILE, updated);
+        res.status(201).json(newAgent);
+    } catch (error) {
+        console.error("Failed to save agent to MongoDB", error);
+        res.status(500).json({ error: 'Failed to create agent' });
+    }
+});
+
+app.delete('/api/agents/:id', async (req, res) => {
+    try {
+        const result = await Agent.deleteOne({ id: req.params.id });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Agent not found in registry' });
+        }
         res.json({ success: true });
     } catch (error) {
         console.error("Delete agent error:", error);
