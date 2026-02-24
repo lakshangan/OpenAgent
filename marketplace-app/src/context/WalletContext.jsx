@@ -40,6 +40,22 @@ export const WalletProvider = ({ children }) => {
         loadMarketplaceData();
     }, [loadMarketplaceData]);
 
+    // Web 2.5 Hybrid Match: Find which of the active agents this user has bought access to
+    useEffect(() => {
+        if (account && marketplaceAgents.length > 0) {
+            fetch(`http://localhost:3001/api/purchases/${account}`)
+                .then(res => res.json())
+                .then(data => {
+                    const purchasedIds = data.map(d => d.agentId.toString());
+                    const bought = marketplaceAgents.filter(a => purchasedIds.includes(a.id.toString()));
+                    setPurchasedAgents(bought);
+                })
+                .catch(e => console.error("Failed to fetch cross-chain purchases", e));
+        } else {
+            setPurchasedAgents([]);
+        }
+    }, [account, marketplaceAgents]);
+
     // Helper: Sync Identity from Blockchain or Backend (Hybrid)
     const syncIdentity = async (address) => {
         try {
@@ -331,17 +347,16 @@ export const WalletProvider = ({ children }) => {
             const tx = await contract.buyAgent(agent.id, { value: priceWei });
             await tx.wait();
 
-            const response = await fetch(`http://localhost:3001/api/agents/${agent.id}`, {
-                method: 'DELETE'
-            });
+            // Web 2.5: The agent is a software license, so we DON'T delete it from the marketplace!
+            await fetch(`http://localhost:3001/api/purchases`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId: agent.id, buyer: account })
+            }).catch(() => { });
 
-            if (response.ok) {
-                setMarketplaceAgents(prev => prev.filter(a => a.id.toString() !== agent.id.toString()));
-                setPurchasedAgents(prev => [...prev, agent]);
-                return { success: true };
-            }
+            setPurchasedAgents(prev => [...prev, agent]);
+            return { success: true };
 
-            return { success: true, warning: 'Bought on-chain, but server sync failed' };
         } catch (error) {
             console.error("Purchase Error:", error);
             return { success: false, error: error.reason || error.shortMessage || 'On-chain purchase failed' };

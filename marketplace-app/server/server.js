@@ -17,6 +17,7 @@ const AGENTS_FILE = path.join(__dirname, 'agents.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
 const AUCTIONS_FILE = path.join(__dirname, 'auctions.json');
 const FORUM_FILE = path.join(__dirname, 'forum.json');
+const PURCHASES_FILE = path.join(__dirname, 'purchases.json');
 
 // Ensure directories and files exist
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
@@ -24,6 +25,7 @@ if (!fs.existsSync(AGENTS_FILE)) fs.writeFileSync(AGENTS_FILE, '[]');
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '{}');
 if (!fs.existsSync(AUCTIONS_FILE)) fs.writeFileSync(AUCTIONS_FILE, '[]');
 if (!fs.existsSync(FORUM_FILE)) fs.writeFileSync(FORUM_FILE, '[]');
+if (!fs.existsSync(PURCHASES_FILE)) fs.writeFileSync(PURCHASES_FILE, '[]');
 
 // Config Multer
 const storage = multer.diskStorage({
@@ -117,6 +119,27 @@ app.delete('/api/agents/:id', (req, res) => {
         console.error("Delete agent error:", error);
         res.status(500).json({ error: 'Failed to modify registry' });
     }
+});
+
+// PURCHASES (Web 2.5 Hybrid)
+app.post('/api/purchases', (req, res) => {
+    const { agentId, buyer } = req.body;
+    if (!agentId || !buyer) return res.status(400).json({ error: 'Missing data' });
+
+    const purchases = read(PURCHASES_FILE);
+    const exists = purchases.find(p => p.agentId.toString() === agentId.toString() && p.buyer.toLowerCase() === buyer.toLowerCase());
+    if (!exists) {
+        purchases.push({ agentId: agentId.toString(), buyer: buyer.toLowerCase(), timestamp: new Date().toISOString() });
+        write(PURCHASES_FILE, purchases);
+    }
+    res.json({ success: true });
+});
+
+app.get('/api/purchases/:buyer', (req, res) => {
+    const buyer = req.params.buyer.toLowerCase();
+    const purchases = read(PURCHASES_FILE);
+    const userPurchases = purchases.filter(p => p.buyer === buyer);
+    res.json(userPurchases);
 });
 
 // USERS / IDENTITY

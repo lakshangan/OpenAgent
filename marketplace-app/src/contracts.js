@@ -16,7 +16,32 @@ export const REGISTRY_ABI = [
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "seller",
+                "name": "buyer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            }
+        ],
+        "name": "AgentBought",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "creator",
                 "type": "address"
             }
         ],
@@ -35,7 +60,7 @@ export const REGISTRY_ABI = [
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "seller",
+                "name": "creator",
                 "type": "address"
             },
             {
@@ -58,19 +83,13 @@ export const REGISTRY_ABI = [
                 "type": "uint256"
             },
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "buyer",
-                "type": "address"
-            },
-            {
                 "indexed": false,
                 "internalType": "uint256",
-                "name": "price",
+                "name": "newPrice",
                 "type": "uint256"
             }
         ],
-        "name": "AgentSold",
+        "name": "AgentPriceUpdated",
         "type": "event"
     },
     {
@@ -181,6 +200,40 @@ export const REGISTRY_ABI = [
                 "type": "uint256"
             }
         ],
+        "name": "agents",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address payable",
+                "name": "creator",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "active",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
         "name": "auctions",
         "outputs": [
             {
@@ -238,6 +291,30 @@ export const REGISTRY_ABI = [
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_user",
+                "type": "address"
+            }
+        ],
+        "name": "checkAccess",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "string",
                 "name": "_username",
                 "type": "string"
@@ -259,6 +336,30 @@ export const REGISTRY_ABI = [
         "name": "delistAgent",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "hasAccess",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -305,34 +406,26 @@ export const REGISTRY_ABI = [
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "nextAgentId",
+        "outputs": [
             {
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
             }
         ],
-        "name": "listings",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "nextAuctionId",
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "id",
+                "name": "",
                 "type": "uint256"
-            },
-            {
-                "internalType": "address payable",
-                "name": "seller",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "price",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "active",
-                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -412,6 +505,24 @@ export const REGISTRY_ABI = [
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_newPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateAgentPrice",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "string",
                 "name": "",
                 "type": "string"
@@ -430,4 +541,4 @@ export const REGISTRY_ABI = [
     }
 ];
 
-export const CONTRACT_ADDRESS = "0x1BB8cdd16bCC42Abafc47207A6EA39BF9623070D"; // Base Sepolia address
+export const CONTRACT_ADDRESS = "0x2baFbf078c211Bb5d4ABE13891821b630a7FB2c0"; // Base Sepolia address
