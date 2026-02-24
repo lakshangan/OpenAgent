@@ -26,7 +26,8 @@ const agentSchema = new mongoose.Schema({
     website: String,
     discord: String,
     telegram: String,
-    docs: String
+    docs: String,
+    codeFile: String
 }, { collection: 'agents' });
 
 module.exports = mongoose.model('Agent', agentSchema);

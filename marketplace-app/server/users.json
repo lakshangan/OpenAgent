@@ -15,6 +15,12 @@
   "0x2668ed248704baf946f5aa2aa72430ae9df52831": {
     "address": "0x2668ed248704baf946f5aa2aa72430ae9df52831",
     "authType": "web3",
-    "lastLogin": "2026-02-24T06:04:10.094Z"
+    "lastLogin": "2026-02-24T18:17:33.362Z"
+  },
+  "0x4cd579703129f3208e335c4a36e05db1b36907c9": {
+    "address": "0x4cd579703129f3208e335c4a36e05db1b36907c9",
+    "authType": "web3",
+    "lastLogin": "2026-02-24T18:31:33.528Z",
+    "username": "testing"
   }
 }

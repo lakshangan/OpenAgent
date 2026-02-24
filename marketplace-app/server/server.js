@@ -7,6 +7,7 @@ const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const Agent = require('./models/Agent');
+const Purchase = require('./models/Purchase');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (MONGO_URI && !MONGO_URI.includes('<db_password>')) {
@@ -64,7 +65,9 @@ app.get('/api/agents', async (req, res) => {
     }
 });
 
-app.post('/api/agents', upload.single('image'), async (req, res) => {
+const cpUpload = upload.fields([{ name: 'image', maxCount: 1 }, { name: 'agentCode', maxCount: 1 }]);
+
+app.post('/api/agents', cpUpload, async (req, res) => {
     const {
         id, name, role, price, currency, description, owner, github, model,
         version, contextWindow, architecture, framework, apiDependencies,
@@ -95,7 +98,8 @@ app.post('/api/agents', upload.single('image'), async (req, res) => {
         discord,
         telegram,
         docs,
-        image: req.file ? `http://localhost:${PORT}/uploads/${req.file.filename}` : '/assets/agent1.png',
+        image: req.files && req.files['image'] ? `http://localhost:${PORT}/uploads/${req.files['image'][0].filename}` : '/assets/agent1.png',
+        codeFile: req.files && req.files['agentCode'] ? req.files['agentCode'][0].filename : null,
         status: 'Active',
         dateCreated: new Date()
     };
@@ -141,24 +145,72 @@ app.delete('/api/agents/:id', async (req, res) => {
 });
 
 // PURCHASES (Web 2.5 Hybrid)
-app.post('/api/purchases', (req, res) => {
+app.post('/api/purchases', async (req, res) => {
     const { agentId, buyer } = req.body;
     if (!agentId || !buyer) return res.status(400).json({ error: 'Missing data' });
 
-    const purchases = read(PURCHASES_FILE);
-    const exists = purchases.find(p => p.agentId.toString() === agentId.toString() && p.buyer.toLowerCase() === buyer.toLowerCase());
-    if (!exists) {
-        purchases.push({ agentId: agentId.toString(), buyer: buyer.toLowerCase(), timestamp: new Date().toISOString() });
-        write(PURCHASES_FILE, purchases);
+    try {
+        const exists = await Purchase.findOne({ agentId: agentId.toString(), buyer: buyer.toLowerCase() });
+        if (!exists) {
+            await Purchase.create({ agentId: agentId.toString(), buyer: buyer.toLowerCase() });
+
+            // Legacy JSON sync
+            const purchases = read(PURCHASES_FILE);
+            purchases.push({ agentId: agentId.toString(), buyer: buyer.toLowerCase(), timestamp: new Date().toISOString() });
+            write(PURCHASES_FILE, purchases);
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Purchase logging error:", error);
+        res.status(500).json({ error: 'Failed to record purchase' });
     }
-    res.json({ success: true });
 });
 
-app.get('/api/purchases/:buyer', (req, res) => {
-    const buyer = req.params.buyer.toLowerCase();
-    const purchases = read(PURCHASES_FILE);
-    const userPurchases = purchases.filter(p => p.buyer === buyer);
-    res.json(userPurchases);
+app.get('/api/purchases/:buyer', async (req, res) => {
+    try {
+        const buyer = req.params.buyer.toLowerCase();
+        // Return from MongoDB
+        const userPurchases = await Purchase.find({ buyer });
+        res.json(userPurchases);
+    } catch (error) {
+        console.error("Fetch purchases error:", error);
+        res.status(500).json({ error: 'Failed to fetch purchases' });
+    }
+});
+
+// DOWNLOAD AGENT CODE
+app.get('/api/agents/:id/download', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const buyer = req.query.buyer?.toLowerCase();
+
+        if (!buyer) return res.status(400).json({ error: 'Wallet address required for verification' });
+
+        const agent = await Agent.findOne({ id });
+        if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+        // Check ownership/purchase
+        const isOwner = agent.creator?.toLowerCase() === buyer || agent.owner?.toLowerCase() === buyer;
+        const hasBought = await Purchase.findOne({ agentId: id.toString(), buyer });
+
+        if (!isOwner && !hasBought) {
+            return res.status(403).json({ error: 'Access denied: You have not acquired this agent token' });
+        }
+
+        if (!agent.codeFile) {
+            return res.status(404).json({ error: 'No source code uploaded for this agent' });
+        }
+
+        const filePath = path.join(__dirname, 'uploads', agent.codeFile);
+        if (fs.existsSync(filePath)) {
+            res.download(filePath, `${agent.name.replace(/\s+/g, '_')}_Source.zip`);
+        } else {
+            res.status(404).json({ error: 'File not found on server' });
+        }
+    } catch (error) {
+        console.error("Download error:", error);
+        res.status(500).json({ error: 'Failed to process download' });
+    }
 });
 
 // USERS / IDENTITY

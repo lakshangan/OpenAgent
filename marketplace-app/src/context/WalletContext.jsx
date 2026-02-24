@@ -268,7 +268,7 @@ export const WalletProvider = ({ children }) => {
     };
 
     // 3. Sell Agent
-    const addAgent = async (agentData, imageFile) => {
+    const addAgent = async (agentData, imageFile, codeFile) => {
         if (!isConnected) return false;
 
         try {
@@ -310,6 +310,7 @@ export const WalletProvider = ({ children }) => {
             formData.append('owner', username || account);
 
             if (imageFile) formData.append('image', imageFile);
+            if (codeFile) formData.append('agentCode', codeFile);
 
             const extras = ['version', 'contextWindow', 'architecture', 'framework', 'apiDependencies', 'inferenceService', 'license', 'videoLink', 'website', 'discord', 'telegram', 'docs'];
             extras.forEach(ext => formData.append(ext, agentData[ext] || ''));

@@ -255,9 +255,9 @@ const Dashboard = () => {
                                             {(purchasedAgents && purchasedAgents.some(pa => pa.id.toString() === agent.id.toString())) ? (
                                                 <button
                                                     onClick={() => {
+                                                        const url = `http://localhost:3001/api/agents/${agent.id}/download?buyer=${account}`;
                                                         const link = document.createElement("a");
-                                                        link.download = `${agent.name.replace(/\s+/g, '_')}_Source.zip`;
-                                                        link.href = "data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA=="; // Mock zip file
+                                                        link.href = url;
                                                         link.click();
                                                     }}
                                                     className="btn btn-primary"
