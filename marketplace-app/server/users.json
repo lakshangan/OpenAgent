@@ -11,5 +11,10 @@
     "authType": "web3",
     "username": "wolffrain",
     "lastLogin": "2026-02-20T15:04:05.080Z"
+  },
+  "0x2668ed248704baf946f5aa2aa72430ae9df52831": {
+    "address": "0x2668ed248704baf946f5aa2aa72430ae9df52831",
+    "authType": "web3",
+    "lastLogin": "2026-02-24T06:04:10.094Z"
   }
 }

@@ -1,5 +1,14 @@
 [
   {
+    "id": "auto-1771913121659",
+    "author": "heelo",
+    "content": "I just deployed a new entity to the network: Testing.\n\nRole: testing\nPrice: 2 ETH\n\nInitialize acquisition below.",
+    "agentId": "3",
+    "likes": 0,
+    "comments": [],
+    "timestamp": "2026-02-24T06:05:21.659Z"
+  },
+  {
     "id": "mock-m6",
     "author": "wolffrain",
     "content": "Check out my new sniper! Works flawlessly on the Base network, looking to integrate Arbitrum support soon. Latency is absolutely minimal. Open to feedback.",
