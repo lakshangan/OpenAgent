@@ -1,8 +1,19 @@
 export const REGISTRY_ABI = [
     {
-        "inputs": [],
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_initialArbiter",
+                "type": "address"
+            }
+        ],
         "stateMutability": "nonpayable",
         "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "ReentrancyGuardReentrantCall",
+        "type": "error"
     },
     {
         "anonymous": false,
@@ -68,6 +79,12 @@ export const REGISTRY_ABI = [
                 "internalType": "uint256",
                 "name": "price",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "artifactHash",
+                "type": "bytes32"
             }
         ],
         "name": "AgentListed",
@@ -90,6 +107,25 @@ export const REGISTRY_ABI = [
             }
         ],
         "name": "AgentPriceUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "oldArbiter",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newArbiter",
+                "type": "address"
+            }
+        ],
+        "name": "ArbiterUpdated",
         "type": "event"
     },
     {
@@ -178,6 +214,125 @@ export const REGISTRY_ABI = [
         "inputs": [
             {
                 "indexed": true,
+                "internalType": "address",
+                "name": "creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "CreatorSlashed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "totalStrikes",
+                "type": "uint256"
+            }
+        ],
+        "name": "CreatorStrike",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "escrowId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "buyer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "evidenceHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "DisputeOpened",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "escrowId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "buyerPayout",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "creatorPayout",
+                "type": "uint256"
+            }
+        ],
+        "name": "DisputeResolved",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "escrowId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "responseHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "DisputeResponded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "escrowId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
                 "internalType": "uint256",
                 "name": "agentId",
                 "type": "uint256"
@@ -191,7 +346,44 @@ export const REGISTRY_ABI = [
             {
                 "indexed": false,
                 "internalType": "address",
-                "name": "recipient",
+                "name": "creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "createdAt",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "expiryAt",
+                "type": "uint256"
+            }
+        ],
+        "name": "EscrowCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "escrowId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "creator",
                 "type": "address"
             },
             {
@@ -201,7 +393,7 @@ export const REGISTRY_ABI = [
                 "type": "uint256"
             }
         ],
-        "name": "EscrowSettled",
+        "name": "EscrowFinalized",
         "type": "event"
     },
     {
@@ -222,6 +414,45 @@ export const REGISTRY_ABI = [
         ],
         "name": "IdentityClaimed",
         "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "ESCROW_WINDOW",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "LISTING_BOND",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "MAX_STRIKES",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [
@@ -252,6 +483,24 @@ export const REGISTRY_ABI = [
                 "internalType": "bool",
                 "name": "active",
                 "type": "bool"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "artifactHash",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "arbiter",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -359,6 +608,44 @@ export const REGISTRY_ABI = [
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "creatorBonds",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "creatorStrikes",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "uint256",
                 "name": "_id",
                 "type": "uint256"
@@ -375,29 +662,171 @@ export const REGISTRY_ABI = [
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
             }
         ],
         "name": "escrows",
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "agentId",
                 "type": "uint256"
             },
             {
-                "internalType": "address payable",
+                "internalType": "address",
+                "name": "buyer",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "creator",
                 "type": "address"
             },
             {
-                "internalType": "bool",
-                "name": "isSettled",
-                "type": "bool"
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "createdAt",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "expiryAt",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum OpenAgentRegistry.EscrowState",
+                "name": "state",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "buyerEvidenceHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "creatorResponseHash",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_escrowId",
+                "type": "uint256"
+            }
+        ],
+        "name": "finalizeEscrow",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_id",
+                "type": "uint256"
+            }
+        ],
+        "name": "getAgentArtifactHash",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_creator",
+                "type": "address"
+            }
+        ],
+        "name": "getBondMultiplier",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_escrowId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getEscrow",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "agentId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "buyer",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "creator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "createdAt",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "expiryAt",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "enum OpenAgentRegistry.EscrowState",
+                        "name": "state",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "buyerEvidenceHash",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "creatorResponseHash",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct OpenAgentRegistry.Escrow",
+                "name": "",
+                "type": "tuple"
             }
         ],
         "stateMutability": "view",
@@ -452,11 +881,29 @@ export const REGISTRY_ABI = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "insurancePool",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
                 "name": "_price",
                 "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "_artifactHash",
+                "type": "bytes32"
             }
         ],
         "name": "listAgent",
@@ -467,7 +914,7 @@ export const REGISTRY_ABI = [
                 "type": "uint256"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -494,6 +941,37 @@ export const REGISTRY_ABI = [
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "nextEscrowId",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_escrowId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "_evidenceHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "openDispute",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -539,21 +1017,83 @@ export const REGISTRY_ABI = [
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "_agentId",
+                "name": "_escrowId",
                 "type": "uint256"
             },
             {
-                "internalType": "address payable",
-                "name": "_buyer",
+                "internalType": "uint256",
+                "name": "_buyerPayout",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_creatorPayout",
+                "type": "uint256"
+            }
+        ],
+        "name": "resolveDispute",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_escrowId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "_responseHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "respondDispute",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newArbiter",
+                "type": "address"
+            }
+        ],
+        "name": "setArbiter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_newPool",
+                "type": "address"
+            }
+        ],
+        "name": "setInsurancePool",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_creator",
                 "type": "address"
             },
             {
-                "internalType": "bool",
-                "name": "_favorBuyer",
-                "type": "bool"
+                "internalType": "uint256",
+                "name": "_score",
+                "type": "uint256"
             }
         ],
-        "name": "resolveEscrow",
+        "name": "setTrustScore",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -588,6 +1128,25 @@ export const REGISTRY_ABI = [
             }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "trustScores",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -629,4 +1188,37 @@ export const REGISTRY_ABI = [
     }
 ];
 
-export const CONTRACT_ADDRESS = import.meta.env.VITE_REGISTRY_ADDRESS || "0x64ff14cfaCc453CC204fAAde8a77A3C7E644663E";
+export const CONTRACT_ADDRESS = "0x1AAb5946263Eeb41107661D74f946F176E0d281E";
+
+export const SUBSCRIPTIONS_ABI = [
+    {
+        "inputs": [{ "internalType": "uint256", "name": "agentId", "type": "uint256" }],
+        "name": "subscribe",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "uint256", "name": "agentId", "type": "uint256" }],
+        "name": "extendSubscription",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "uint256", "name": "agentId", "type": "uint256" }],
+        "name": "cancelSubscription",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "address", "name": "user", "type": "address" }, { "internalType": "uint256", "name": "agentId", "type": "uint256" }],
+        "name": "isActive",
+        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
+
+export const SUBSCRIPTIONS_ADDRESS = import.meta.env.VITE_SUBSCRIPTIONS_ADDRESS || "0xc384fDC3Eb026c9997fbA4399A4FBe8Af5Ce3694";

@@ -9,19 +9,22 @@ import {
     Search,
     RefreshCw,
     TrendingUp,
-    Shield
+    Shield,
+    Copy,
+    Check
 } from 'lucide-react';
 import './Portal.css';
 
 const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 const PortalDashboard = () => {
-    const [stats, setStats] = useState({ agents: 0, users: 0, sales: 0, volume: '0 ETH' });
+    const [stats, setStats] = useState({ agents: 0, users: 0, sales: 0, volume: '0 ETH', registryAddress: '' });
     const [users, setUsers] = useState([]);
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('ledger');
+    const [copiedPayload, setCopiedPayload] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -67,6 +70,14 @@ const PortalDashboard = () => {
             });
             fetchData(localStorage.getItem('portalToken'));
         } catch (e) { }
+    };
+
+
+
+    const copyToClipboard = async (text, dId) => {
+        await navigator.clipboard.writeText(text);
+        setCopiedPayload(dId);
+        setTimeout(() => setCopiedPayload(null), 2000);
     };
 
     const handleLogout = () => {
@@ -296,23 +307,66 @@ const PortalDashboard = () => {
                                                         <strong style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Provided Evidence / Reason</strong>
                                                         "{d.disputeReason || 'No reason provided.'}"
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-                                                        <button
-                                                            onClick={() => handleResolve(d._id, 'resolve')}
-                                                            style={{ padding: '8px 24px', background: '#10b981', color: '#fff', border: '1px solid #059669', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.15)' }}
-                                                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.2)'; }}
-                                                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.15)'; }}
-                                                        >
-                                                            Accept & Refund Buyer
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleResolve(d._id, 'reject')}
-                                                            style={{ padding: '8px 24px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-                                                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                                                        >
-                                                            Reject & Pay Seller
-                                                        </button>
+                                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid #f1f5f9', flexDirection: 'column' }}>
+
+                                                        <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', color: '#f8fafc', fontSize: '13px', fontFamily: 'monospace', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <span style={{ color: '#94a3b8' }}>Safe Transaction Payload generator (Base Sepolia)</span>
+                                                            </div>
+                                                            <div style={{ wordBreak: 'break-all' }}>
+                                                                <div style={{ color: '#38bdf8', marginBottom: '4px' }}>Target Contract (To):</div>
+                                                                {stats.registryAddress || 'Loading...'}
+                                                            </div>
+                                                            <div style={{ wordBreak: 'break-all' }}>
+                                                                <div style={{ color: '#38bdf8', marginBottom: '4px' }}>Value (ETH):</div>
+                                                                0
+                                                            </div>
+
+                                                            <div style={{ background: '#1e293b', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #10b981' }}>
+                                                                <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                                                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>To accept dispute & refund buyer:</span>
+                                                                    <button
+                                                                        onClick={() => copyToClipboard(d.payloadAccept, d._id + '-accept')}
+                                                                        style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                                    >
+                                                                        {copiedPayload === d._id + '-accept' ? <Check size={14} color="#10b981" /> : <Copy size={14} />} {copiedPayload === d._id + '-accept' ? 'Copied' : 'Copy'}
+                                                                    </button>
+                                                                </div>
+                                                                <div style={{ color: '#94a3b8', wordBreak: 'break-all', fontSize: '11px' }}>
+                                                                    Data: {d.payloadAccept || 'N/A'}
+                                                                </div>
+                                                            </div>
+
+                                                            <div style={{ background: '#1e293b', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #ef4444' }}>
+                                                                <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                                                    <span style={{ color: '#ef4444', fontWeight: 'bold' }}>To reject dispute & pay seller:</span>
+                                                                    <button
+                                                                        onClick={() => copyToClipboard(d.payloadReject, d._id + '-reject')}
+                                                                        style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                                    >
+                                                                        {copiedPayload === d._id + '-reject' ? <Check size={14} color="#10b981" /> : <Copy size={14} />} {copiedPayload === d._id + '-reject' ? 'Copied' : 'Copy'}
+                                                                    </button>
+                                                                </div>
+                                                                <div style={{ color: '#94a3b8', wordBreak: 'break-all', fontSize: '11px' }}>
+                                                                    Data: {d.payloadReject || 'N/A'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                                            <button
+                                                                onClick={() => handleResolve(d._id, 'resolve')}
+                                                                style={{ padding: '8px 24px', background: '#10b981', color: '#fff', border: '1px solid #059669', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.15)' }}
+                                                            >
+                                                                Mark as Refunded (DB Only)
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleResolve(d._id, 'reject')}
+                                                                style={{ padding: '8px 24px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                            >
+                                                                Mark as Completed (DB Only)
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}

@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const { verifyMessage } = require('ethers');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const TrustEngine = require('../trust-engine/TrustEngine');
+const trustEngine = new TrustEngine();
 
 const nonces = {};
 const JWT_SECRET = process.env.JWT_SECRET || 'openagent_secure_secret_fallback_123';
@@ -42,6 +44,12 @@ router.post('/verify', async (req, res) => {
                 user.lastLogin = new Date();
                 await user.save();
             }
+
+            // --- TRUST ENFORCEMENT ---
+            // Recalculate trust on login and sync to chain
+            const currentScore = await trustEngine.computeUserTrust(formattedAddress);
+            console.log(`Trust score for ${formattedAddress} on login: ${currentScore}`);
+
 
             const token = jwt.sign(
                 { address: formattedAddress, username: user.username },

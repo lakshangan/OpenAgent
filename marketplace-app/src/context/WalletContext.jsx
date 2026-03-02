@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { BrowserProvider, Contract, parseEther } from 'ethers';
-import { REGISTRY_ABI, CONTRACT_ADDRESS } from '../contracts';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { CONTRACT_ADDRESS, REGISTRY_ABI, SUBSCRIPTIONS_ADDRESS, SUBSCRIPTIONS_ABI } from '../contracts';
+import { useNavigate } from 'react-router-dom';
 
 const WalletContext = createContext();
 
@@ -25,10 +26,10 @@ export const WalletProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     // --- Data Fetching ---
-    const loadMarketplaceData = useCallback(async () => {
+    const loadMarketplaceData = async (showExperimental = false) => {
         try {
             const [agentsRes, auctionsRes] = await Promise.all([
-                fetch(`${API_URL}/api/agents`).catch(() => ({ ok: false })),
+                fetch(`${API_URL}/api/agents${showExperimental ? '?showExperimental=true' : ''}`).catch(() => ({ ok: false })),
                 fetch(`${API_URL}/api/auctions`).catch(() => ({ ok: false }))
             ]);
 
@@ -39,11 +40,11 @@ export const WalletProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
     useEffect(() => {
         loadMarketplaceData();
-    }, [loadMarketplaceData]);
+    }, []); // Removed loadMarketplaceData from dependency array as it's not wrapped in useCallback anymore
 
     // Web 2.5 Hybrid Match: Find which of the active agents this user has bought access to
     useEffect(() => {
@@ -74,8 +75,8 @@ export const WalletProvider = ({ children }) => {
     // Helper: Sync Identity from Blockchain or Backend (Hybrid)
     const syncIdentity = async (address) => {
         try {
-            const provider = new BrowserProvider(window.ethereum);
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, provider);
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, provider);
 
             const identity = await contract.identities(address);
             if (identity && identity.exists) {
@@ -96,7 +97,7 @@ export const WalletProvider = ({ children }) => {
                 const data = await res.json();
                 if (data && data.username) {
                     setUsername(data.username);
-                    if (data.visible_trust !== undefined) setTrustScore(data.visible_trust);
+                    if (data.trustScore !== undefined) setTrustScore(data.trustScore);
                     return;
                 }
             }
@@ -117,7 +118,7 @@ export const WalletProvider = ({ children }) => {
 
         try {
             setLoading(true);
-            const provider = new BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum);
 
             // Ensure we are on Base Sepolia
             const chainId = await window.ethereum.request({ method: 'eth_chainId' });
@@ -275,17 +276,18 @@ export const WalletProvider = ({ children }) => {
         if (!window.ethereum) return { success: false, error: 'Web3 provider missing' };
 
         try {
-            const provider = new BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum);
 
             // Hard check network before signing
             const { chainId } = await provider.getNetwork();
             if (chainId !== 84532n && chainId !== 84532) { // 0x14a34
-                await switchNetwork();
-                return { success: false, error: 'Switched network to Base Sepolia. Please try again.' };
+                // The switchNetwork function is not directly available here,
+                // but connectWallet handles it. For now, we'll just return an error.
+                return { success: false, error: 'Please switch to Base Sepolia network and try again.' };
             }
 
             const signer = await provider.getSigner();
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
 
             const tx = await contract.claimIdentity(newName);
             await tx.wait(); // Wait for confirmation on chain
@@ -311,24 +313,63 @@ export const WalletProvider = ({ children }) => {
 
     // 3. Sell Agent
     const addAgent = async (agentData, imageFile, codeFile) => {
-        if (!isConnected) return false;
+        if (!isConnected) return { success: false, error: "Wallet not connected" };
 
         try {
-            const provider = new BrowserProvider(window.ethereum);
-
-            // Hard check network 
+            const provider = new ethers.BrowserProvider(window.ethereum);
             const { chainId } = await provider.getNetwork();
             if (chainId !== 84532n && chainId !== 84532) {
-                await switchNetwork();
-                return false;
+                return { success: false, error: "Please switch to Base Sepolia network" };
             }
 
+            // 1. Contract Listing (Web3)
             const signer = await provider.getSigner();
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
 
-            const priceWei = parseEther(agentData.price.toString());
+            // Ensure price is a valid string for parseEther
+            const priceStr = agentData.price ? agentData.price.toString() : "0";
+            const priceWei = ethers.parseEther(priceStr);
 
-            const tx = await contract.listAgent(priceWei);
+            let computedHash = '0x' + "0".repeat(64);
+            if (codeFile) {
+                const buffer = await codeFile.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                computedHash = '0x' + hashHex;
+            }
+
+            console.log("Pre-flight check:", { priceStr, priceWei: priceWei.toString(), artifactHash: computedHash });
+
+            const multiplier = await contract.getBondMultiplier(account);
+            if (multiplier === 0n || multiplier === 0) {
+                return { success: false, error: "Your account is RESTRICTED (Trust Score < 50). You cannot list agents." };
+            }
+
+            // Fetch listing bond from contract
+            const baseBond = await contract.LISTING_BOND();
+            const totalBond = BigInt(baseBond) * BigInt(multiplier);
+
+            // Check if user has enough balance
+            const balance = await provider.getBalance(account);
+            if (balance < totalBond) {
+                const required = ethers.formatEther(totalBond);
+                const current = ethers.formatEther(balance);
+                return { success: false, error: `Insufficient funds for listing bond. Required: ${required} ETH. Your Balance: ${current} ETH.` };
+            }
+
+            // ensure we have BigInt for the contract call
+            const priceVal = BigInt(priceWei);
+            const bondVal = BigInt(totalBond);
+            const hashVal = computedHash.toLowerCase();
+
+            if (hashVal.length !== 66) {
+                return { success: false, error: "Invalid artifact hash length. Please try again." };
+            }
+
+            console.log(`Executing listAgent with Price: ${priceVal}, Hash: ${hashVal}, Bond: ${bondVal}`);
+
+            const tx = await contract.listAgent(priceVal, hashVal, { value: bondVal });
             const receipt = await tx.wait();
 
             // Find AgentListed event
@@ -336,30 +377,45 @@ export const WalletProvider = ({ children }) => {
                 .map(log => {
                     try { return contract.interface.parseLog(log); } catch (e) { return null; }
                 })
-                .find(parsed => parsed && parsed.name === 'AgentListed');
+                .find(e => e && e.name === 'AgentListed');
 
-            const onChainId = event?.args?.id?.toString() || Date.now().toString();
+            if (!event) return { success: false, error: "Deployment succeeded but event not found." };
 
+            const onChainId = (event.args.id || event.args[0]).toString();
+
+            // 2. Add metadata to database via API
             const formData = new FormData();
             formData.append('id', onChainId);
-            formData.append('name', agentData.name);
-            formData.append('role', agentData.role);
-            formData.append('price', agentData.price);
-            formData.append('currency', agentData.currency || 'ETH');
-            formData.append('description', agentData.description);
-            formData.append('github', agentData.github || '');
+            formData.append('onChainId', onChainId);
+            formData.append('name', agentData.name || '');
+            formData.append('role', agentData.role || '');
+            formData.append('price', priceStr);
+            formData.append('description', agentData.description || '');
+            formData.append('owner', account);
+            formData.append('creator', account);
             formData.append('model', agentData.model || '');
-            formData.append('owner', username || account);
+            formData.append('framework', agentData.framework || '');
 
             if (imageFile) formData.append('image', imageFile);
             if (codeFile) formData.append('agentCode', codeFile);
 
-            const extras = ['version', 'contextWindow', 'architecture', 'framework', 'apiDependencies', 'inferenceService', 'license', 'videoLink', 'website', 'discord', 'telegram', 'docs'];
-            extras.forEach(ext => formData.append(ext, agentData[ext] || ''));
+            // Limit gallery to 3 images as per typical UI
+            if (agentData.galleryFiles) {
+                agentData.galleryFiles.slice(0, 3).forEach((file) => {
+                    if (file) formData.append('gallery', file);
+                });
+            }
+
+            const extras = ['version', 'contextWindow', 'architecture', 'inferenceService', 'videoLink', 'website', 'discord', 'telegram', 'docs', 'pricingModel', 'deliveryType', 'github'];
+            extras.forEach(ext => {
+                if (agentData[ext]) formData.append(ext, agentData[ext]);
+            });
+
             formData.append('tags', JSON.stringify(agentData.tags || []));
             formData.append('txHash', tx.hash);
+            formData.append('artifactHash', hashVal);
 
-            const response = await fetch(`${API_URL}/api/agents`, {
+            const apiRes = await fetch(`${API_URL}/api/agents`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
@@ -367,16 +423,20 @@ export const WalletProvider = ({ children }) => {
                 body: formData
             });
 
-            if (response.ok) {
-                const newAgent = await response.json();
+            if (apiRes.ok) {
+                const newAgent = await apiRes.json();
                 setMarketplaceAgents(prev => [newAgent, ...prev]);
-                return true;
+                return { success: true };
             }
-            return false;
+            const errorData = await apiRes.json();
+            return { success: false, error: errorData.error || "Database sync failed." };
         } catch (error) {
             console.error("Failed to deploy agent:", error);
-            alert(`Deployment Error: ${error.reason || error.shortMessage || error.message}`);
-            return false;
+            const errReason = error.reason || error.shortMessage || error.message || "An unexpected error occurred.";
+            if (errReason.includes("out-of-bounds") || errReason.includes("out of range")) {
+                return { success: false, error: `Value out-of-bounds in contract call. Please check your price and artifacts. (Technical: ${errReason})` };
+            }
+            return { success: false, error: errReason };
         }
     };
 
@@ -385,11 +445,11 @@ export const WalletProvider = ({ children }) => {
         if (!isConnected) return { success: false, error: 'Connect your wallet first' };
 
         try {
-            const provider = new BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
 
-            const priceWei = parseEther(agent.price.toString());
+            const priceWei = ethers.parseEther(agent.price.toString());
 
             const tx = await contract.buyAgent(agent.id, { value: priceWei });
             await tx.wait();
@@ -420,16 +480,52 @@ export const WalletProvider = ({ children }) => {
         }
     };
 
+    // 4.5 Open Dispute (Escrow)
+    const openDispute = async (escrowId, evidence) => {
+        if (!isConnected) return { success: false, error: 'Connect wallet to dispute' };
+        try {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+
+            let evidenceHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            if (evidence) {
+                const buffer = new TextEncoder().encode(evidence);
+                const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                evidenceHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            const tx = await contract.openDispute(escrowId, evidenceHash);
+            await tx.wait();
+
+            // Update local DB instantly so frontend registers it before indexer catches up
+            fetch(`${API_URL}/api/disputes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                },
+                body: JSON.stringify({ escrowId, evidence })
+            }).catch(() => { });
+
+            return { success: true, transaction: tx };
+        } catch (error) {
+            console.error("Dispute failed:", error);
+            return { success: false, error: error.reason || error.message };
+        }
+    };
+
     // 5. Auctions 
     const placeBid = async (auctionId, amount) => {
         if (!isConnected) return { success: false, error: 'Connect your wallet first' };
 
         try {
-            const provider = new BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
 
-            const amountWei = parseEther(amount.toString());
+            const amountWei = ethers.parseEther(amount.toString());
 
             const tx = await contract.placeBid(auctionId, { value: amountWei });
             await tx.wait();
@@ -455,13 +551,49 @@ export const WalletProvider = ({ children }) => {
         }
     };
 
+    const subscribeToAgent = async (agent) => {
+        try {
+            if (!window.ethereum || !account) return { success: false, error: 'Wallet not connected' };
+            const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await ethersProvider.getSigner();
+
+            const subContract = new ethers.Contract(SUBSCRIPTIONS_ADDRESS, SUBSCRIPTIONS_ABI, signer);
+            const priceInWei = ethers.parseEther(agent.price.toString());
+
+            const tx = await subContract.subscribe(agent.id, { value: priceInWei });
+            await tx.wait();
+            return { success: true, transaction: tx };
+        } catch (error) {
+            console.error("Subscription failed:", error);
+            return { success: false, error: error.reason || error.message };
+        }
+    };
+
+    const extendAgentSubscription = async (agent) => {
+        try {
+            if (!window.ethereum || !account) return { success: false, error: 'Wallet not connected' };
+            const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await ethersProvider.getSigner();
+
+            const subContract = new ethers.Contract(SUBSCRIPTIONS_ADDRESS, SUBSCRIPTIONS_ABI, signer);
+            const priceInWei = ethers.parseEther(agent.price.toString());
+
+            const tx = await subContract.extendSubscription(agent.id, { value: priceInWei });
+            await tx.wait();
+            return { success: true, transaction: tx };
+        } catch (error) {
+            console.error("Extend failed:", error);
+            return { success: false, error: error.reason || error.message };
+        }
+    };
+
     const deleteAgent = async (id) => {
         if (!isConnected) return { success: false, error: 'Connect your wallet first' };
 
         try {
-            const provider = new BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-            const contract = new Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, signer);
 
             // 1. Delist on-chain
             const tx = await contract.delistAgent(id);
@@ -500,15 +632,18 @@ export const WalletProvider = ({ children }) => {
             user,
             authType: 'web3',
             connectWallet,
-            loginWithGoogle,
             disconnectWallet,
             saveUsername,
+            addAgent,
+            buyAgent,
+            openDispute,
+            loadMarketplaceData,
+            deleteAgent,
+            placeBid,
+            subscribeToAgent,
+            extendAgentSubscription,
             marketplaceAgents,
             auctions,
-            addAgent,
-            deleteAgent,
-            buyAgent,
-            placeBid,
             loading,
             trustScore,
             purchasedAgents,

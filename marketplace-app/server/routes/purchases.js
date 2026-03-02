@@ -3,13 +3,49 @@ const router = express.Router();
 const Purchase = require('../models/Purchase');
 const authenticateToken = require('../middleware/authMiddleware');
 
+const Agent = require('../models/Agent');
+const trustEngine = require('../utils/trustEngine');
+
 router.post('/', authenticateToken, async (req, res) => {
     const { agentId, buyer, txHash } = req.body;
     if (!agentId || !buyer) return res.status(400).json({ error: 'Missing data' });
     try {
         const buyerLower = buyer.toLowerCase();
 
-        let updateData = { timestamp: new Date() };
+        const buyerScore = await trustEngine.computeUserTrust(buyerLower);
+        const buyerTier = trustEngine.getTrustTier(buyerScore);
+
+        if (buyerTier === 'RESTRICTED') {
+            return res.status(403).json({ error: 'Buyer account restricted due to trust score.' });
+        }
+
+        const agent = await Agent.findOne({ id: agentId.toString() });
+        if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+        const creatorScore = await trustEngine.computeUserTrust(agent.owner || agent.creator);
+        const creatorTier = trustEngine.getTrustTier(creatorScore);
+
+        if (creatorTier === 'RESTRICTED' || agent.trustTier === 'RESTRICTED') {
+            return res.status(403).json({ error: 'Agent creator restricted due to trust score.' });
+        }
+
+        let escrowHours = 48; // Base for REVIEWED and VERIFIED
+        if (creatorTier === 'EXPERIMENTAL') escrowHours = 72;
+
+        const highRisk = ['Trading', 'Perps', 'Arbitrage'];
+        const isHighRisk = agent.tags && agent.tags.some(tag => highRisk.includes(tag));
+        if (isHighRisk) escrowHours = 72;
+
+        const expiryAt = new Date();
+        expiryAt.setHours(expiryAt.getHours() + escrowHours);
+
+        let updateData = {
+            timestamp: new Date(),
+            trustTierSnapshot: creatorTier,
+            escrowHours,
+            categorySnapshot: isHighRisk ? 'HighRisk' : 'Standard',
+            expiryAt
+        };
         if (txHash) {
             updateData.txHash = txHash;
         }

@@ -21,9 +21,9 @@ const AgentCard = ({ agent }) => {
             <div className="agent-image-container">
                 <AgentAvatar image={agent.image} name={agent.name} size="80%" />
                 <div className="agent-badge-system">
-                    <div className="badge-item active">
-                        <Activity size={10} />
-                        <span>LIVE</span>
+                    <div className="badge-item active" style={{ backgroundColor: agent.trustTier === 'VERIFIED' ? '#10b981' : agent.trustTier === 'REVIEWED' ? '#3b82f6' : '#f59e0b', padding: '2px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', color: 'white', fontWeight: 'bold' }}>
+                        <ShieldCheck size={12} />
+                        <span>{agent.trustTier} • {agent.trustScore || agent.creatorTrust || 10}</span>
                     </div>
                 </div>
             </div>
@@ -51,9 +51,9 @@ const AgentCard = ({ agent }) => {
                         <span className="stat-label">UPTIME</span>
                         <span className="stat-data">{uptime}%</span>
                     </div>
-                    <div className="stat-unit" title="Trust is calculated using stake, verified contributions, marketplace performance, and consistency.">
+                    <div className="stat-unit" title="Trust Score reflects the total reliability.">
                         <span className="stat-label">TRUST</span>
-                        <span className="stat-data">{agent.creatorTrust || 10}</span>
+                        <span className="stat-data">{agent.trustScore || agent.creatorTrust || 10}</span>
                     </div>
                 </div>
 
@@ -62,7 +62,7 @@ const AgentCard = ({ agent }) => {
                         <span className="price-desc">Current List</span>
                         <div className="price-amount">
                             <Zap size={14} className="zap-icon" fill="currentColor" />
-                            <span>{agent.price} {agent.currency || 'ETH'}</span>
+                            <span>{agent.price} {agent.currency || 'ETH'} {agent.pricingModel === 'RECURRING' && <span style={{ fontSize: '10px', color: '#94a3b8' }}>/mo</span>}</span>
                         </div>
                     </div>
                     <div className="agent-role-pill">{agent.role}</div>

@@ -15,7 +15,9 @@ const userSchema = new mongoose.Schema({
     contribution_points_rolling_30d: { type: Number, default: 0 },
     hidden_rating: { type: Number, default: 10 },
     daily_posts_date: String,
-    daily_posts_count: { type: Number, default: 0 }
+    daily_posts_count: { type: Number, default: 0 },
+    trustScore: { type: Number, default: 10 },
+    trustTier: { type: String, default: 'RESTRICTED' }
 }, { collection: 'users' });
 
 module.exports = mongoose.model('User', userSchema);

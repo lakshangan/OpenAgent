@@ -1,8 +1,9 @@
 const hre = require("hardhat");
 
 async function main() {
+    const [deployer] = await hre.ethers.getSigners();
     const Registry = await hre.ethers.getContractFactory("OpenAgentRegistry");
-    const registry = await Registry.deploy();
+    const registry = await Registry.deploy(deployer.address);
 
     await registry.waitForDeployment();
 

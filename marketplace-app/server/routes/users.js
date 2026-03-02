@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
 const authenticateToken = require('../middleware/authMiddleware');
 const trustEngine = require('../utils/trustEngine');
 
@@ -82,6 +83,32 @@ router.get('/:identifier', async (req, res) => {
         res.json(user);
     } catch (err) {
         res.status(500).json(null);
+    }
+});
+
+router.get('/:address/subscriptions', async (req, res) => {
+    try {
+        const subscriptions = await Subscription.find({
+            userAddress: req.params.address.toLowerCase(),
+            status: 'ACTIVE',
+            expiresAt: { $gt: new Date() }
+        });
+        res.json(subscriptions);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+router.get('/:address/subscriptions/:agentId', async (req, res) => {
+    try {
+        const sub = await Subscription.findOne({
+            userAddress: req.params.address.toLowerCase(),
+            agentId: req.params.agentId
+        });
+        if (!sub) return res.status(404).json({ error: 'Not found' });
+        res.json(sub);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

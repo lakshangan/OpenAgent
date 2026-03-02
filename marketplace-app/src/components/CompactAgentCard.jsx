@@ -14,8 +14,9 @@ const CompactAgentCard = ({ agent }) => {
             <div className="compact-image-area">
                 <AgentAvatar image={agent.image} name={agent.name} size="70%" />
                 <div className="compact-status-overlay">
-                    {isRecent && <div className="compact-status-tag recent">New</div>}
-                    {isTop && <div className="compact-status-tag liked">Top</div>}
+                    <div className="compact-status-tag" style={{ backgroundColor: agent.trustTier === 'VERIFIED' ? '#10b981' : agent.trustTier === 'REVIEWED' ? '#3b82f6' : '#f59e0b', color: 'white', fontWeight: 'bold' }}>
+                        {agent.trustTier || 'EXPERIMENTAL'} • {agent.trustScore || 10}
+                    </div>
                 </div>
                 <div style={{ position: 'absolute', top: '12px', right: '12px', color: 'rgba(255,255,255,0.2)', zIndex: 3 }}>
                     <ArrowUpRight size={14} />
@@ -34,7 +35,7 @@ const CompactAgentCard = ({ agent }) => {
                 <div className="compact-footer-row">
                     <div className="compact-agent-price">
                         <Zap size={12} className="zap-icon-mini" fill="currentColor" />
-                        <span>{agent.price} {agent.currency || 'ETH'}</span>
+                        <span>{agent.price} {agent.currency || 'ETH'} {agent.pricingModel === 'RECURRING' && <span style={{ fontSize: '8px', color: '#94a3b8' }}>/mo</span>}</span>
                     </div>
                     <div className="compact-role-badge">
                         {agent.role}

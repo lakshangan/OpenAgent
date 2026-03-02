@@ -4,7 +4,7 @@ import { useWallet } from '../context/WalletContext';
 import {
     Terminal, Package, ExternalLink, Shield,
     User, Settings, Grid, Activity, Award, History,
-    Copy, CheckCircle2, Globe, Github, Twitter, FileCode
+    Copy, CheckCircle2, Globe, Github, Twitter, FileCode, AlertTriangle
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import AgentAvatar from '../components/AgentAvatar';
@@ -15,6 +15,16 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('deployments');
     const [copied, setCopied] = useState(false);
+    const [subscriptions, setSubscriptions] = useState([]);
+
+    React.useEffect(() => {
+        if (isConnected && account) {
+            fetch(`${API_URL}/api/users/${account}/subscriptions`)
+                .then(res => res.json())
+                .then(data => setSubscriptions(data))
+                .catch(() => { });
+        }
+    }, [isConnected, account]);
 
     const myAgents = useMemo(() => {
         if (!isConnected || !account) return [];
@@ -51,7 +61,8 @@ const Dashboard = () => {
                 agentId: p.agentId,
                 timestamp: p.timestamp,
                 txHash: p.txHash,
-                date: new Date(p.timestamp)
+                date: new Date(p.timestamp),
+                status: p.status
             })));
         }
 
@@ -63,7 +74,8 @@ const Dashboard = () => {
                 agentId: p.agentId,
                 timestamp: p.timestamp,
                 txHash: p.txHash,
-                date: new Date(p.timestamp)
+                date: new Date(p.timestamp),
+                status: p.status
             })));
         }
 
@@ -234,6 +246,7 @@ const Dashboard = () => {
                 <div style={{ marginBottom: '40px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '40px', overflowX: 'auto' }}>
                     {[
                         { id: 'deployments', label: 'My Deployments', icon: Grid },
+                        { id: 'subscriptions', label: 'Active Subscriptions', icon: Package },
                         { id: 'activity', label: 'Recent Activity', icon: Activity },
                         { id: 'history', label: 'History', icon: History },
                         { id: 'settings', label: 'Access Keys', icon: Terminal }
@@ -353,6 +366,42 @@ const Dashboard = () => {
                         )
                     )}
 
+                    {activeTab === 'subscriptions' && (
+                        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '32px', padding: '32px' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <Package size={20} color="var(--brand-primary)" />
+                                Active Subscriptions
+                            </h3>
+                            {subscriptions && subscriptions.length > 0 ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+                                    {subscriptions.map(sub => {
+                                        const agent = marketplaceAgents.find(a => a.id.toString() === sub.agentId.toString());
+                                        const daysRemaining = Math.max(0, Math.ceil((new Date(sub.expiresAt) - new Date()) / (1000 * 60 * 60 * 24)));
+                                        return (
+                                            <div key={sub._id} style={{ padding: '24px', background: '#000', border: '1px solid #1a1a1a', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                <div style={{ fontWeight: '800', fontSize: '16px', color: '#fff' }}>
+                                                    {agent ? agent.name : `Agent #${sub.agentId}`}
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#666' }}>
+                                                    Expires: {new Date(sub.expiresAt).toLocaleDateString()}
+                                                </div>
+                                                <div style={{ fontSize: '24px', fontWeight: '900', color: '#10b981' }}>
+                                                    {daysRemaining} Days
+                                                </div>
+                                                <Link to={`/agent/${sub.agentId}`} className="btn btn-primary" style={{ textAlign: 'center', padding: '10px' }}>Manage Access</Link>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '60px 0', opacity: 0.5 }}>
+                                    <Package size={32} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                                    <div style={{ fontWeight: '700' }}>No active subscriptions found.</div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {activeTab === 'activity' && (
                         <div style={{ padding: '60px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '32px', border: '1px solid var(--border-color)' }}>
                             <Activity size={32} style={{ opacity: 0.1, marginBottom: '16px' }} />
@@ -362,6 +411,23 @@ const Dashboard = () => {
 
                     {activeTab === 'history' && (
                         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '32px', padding: '32px' }}>
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                                <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                    <AlertTriangle size={20} color="#ef4444" />
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: '#ef4444', fontWeight: '800', letterSpacing: '0.05em' }}>SECURITY WARNING</div>
+                                        <div style={{ fontSize: '13px', color: '#fca5a5' }}>Never share your seed phrase or private keys with ANYONE, including verified agents.</div>
+                                    </div>
+                                </div>
+                                <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                    <Shield size={20} color="#f59e0b" />
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '800', letterSpacing: '0.05em' }}>ASSET SAFETY</div>
+                                        <div style={{ fontSize: '13px', color: '#fcd34d' }}>Always verify token approvals before confirming smart contract transactions.</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <History size={20} color="var(--brand-primary)" />
                                 Transaction History
@@ -381,8 +447,19 @@ const Dashboard = () => {
                                                         <div style={{ color: '#fff', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>
                                                             {event.label} {agent ? `'${agent.name}'` : `#${event.agentId}`}
                                                         </div>
-                                                        <div style={{ color: '#555', fontSize: '12px', fontWeight: '600' }}>
-                                                            {event.date.toLocaleString()}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ color: '#555', fontSize: '12px', fontWeight: '600' }}>
+                                                                {event.date.toLocaleString()}
+                                                            </div>
+                                                            {event.status && (
+                                                                <div style={{
+                                                                    fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px',
+                                                                    background: event.status === 'CREATED' ? 'rgba(56, 189, 248, 0.2)' : event.status === 'DISPUTED' ? 'rgba(239, 68, 68, 0.2)' : event.status === 'FINALIZED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                                                    color: event.status === 'CREATED' ? '#38bdf8' : event.status === 'DISPUTED' ? '#ef4444' : event.status === 'FINALIZED' ? '#10b981' : '#aaa'
+                                                                }}>
+                                                                    {event.status}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

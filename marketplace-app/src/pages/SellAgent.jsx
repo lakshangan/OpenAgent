@@ -11,8 +11,22 @@ import { useNavigate } from 'react-router-dom';
 import './SellAgent.css';
 
 const SellAgent = () => {
-    const { isConnected, addAgent, account, username } = useWallet();
+    const { isConnected, addAgent, account, username, trustScore } = useWallet();
     const navigate = useNavigate();
+
+    const getTrustTier = (score) => {
+        if (score >= 200) return 'VERIFIED';
+        if (score >= 100) return 'REVIEWED';
+        if (score >= 50) return 'EXPERIMENTAL';
+        return 'RESTRICTED';
+    };
+
+    const tier = getTrustTier(trustScore || 10);
+
+    let bondText = "";
+    if (tier === 'EXPERIMENTAL') bondText = "Your listing will go through review before going live. Bond required: 3x";
+    else if (tier === 'REVIEWED') bondText = "Bond required: 2x";
+    else if (tier === 'VERIFIED') bondText = "Bond required: 1x";
 
     const [formData, setFormData] = useState({
         name: '',
@@ -29,6 +43,8 @@ const SellAgent = () => {
         apiDependencies: 'OpenAI',
         inferenceService: 'Direct',
         license: 'MIT',
+        pricingModel: 'ONE_TIME',
+        deliveryType: 'DOWNLOAD',
         videoLink: '',
         website: '',
         discord: '',
@@ -39,10 +55,11 @@ const SellAgent = () => {
     const [selectedTags, setSelectedTags] = useState([]);
     const [mainImage, setMainImage] = useState(null);
     const [mainPreview, setMainPreview] = useState(null);
+    const [agentCode, setAgentCode] = useState(null);
     const [gallery, setGallery] = useState([null, null, null]);
     const [galleryPreviews, setGalleryPreviews] = useState([null, null, null]);
-    const [agentCode, setAgentCode] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(null);
 
     const currencies = [
         { code: 'ETH', name: 'Ethereum' },
@@ -98,16 +115,17 @@ const SellAgent = () => {
         e.preventDefault();
         if (!isConnected) return;
 
+        setError(null);
         setSubmitting(true);
         // Combine tags into description or handle as separate field if backend supports
-        const finalData = { ...formData, tags: selectedTags };
-        const success = await addAgent(finalData, mainImage, agentCode);
+        const finalData = { ...formData, tags: selectedTags, galleryFiles: gallery };
+        const result = await addAgent(finalData, mainImage, agentCode);
         setSubmitting(false);
 
-        if (success) {
+        if (result.success) {
             navigate('/explore');
         } else {
-            alert('Deployment failed. Ensure your wallet is connected and try again.');
+            setError(result.error || 'Deployment failed. Ensure your wallet is connected and try again.');
         }
     };
 
@@ -124,6 +142,20 @@ const SellAgent = () => {
         );
     }
 
+    if (tier === 'RESTRICTED') {
+        return (
+            <div className="sell-container animate-fade-in" style={{ textAlign: 'center', paddingTop: '200px' }}>
+                <div style={{ marginBottom: '40px', opacity: 0.1 }}>
+                    <AlertCircle size={100} style={{ margin: '0 auto' }} color="red" />
+                </div>
+                <h2 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '16px', color: '#ff4d4d' }}>Access Restricted</h2>
+                <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: '40px', maxWidth: '400px', margin: '0 auto 40px' }}>
+                    Account restricted due to trust score. Contact support.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="sell-container animate-fade-in-up">
             <header className="sell-header">
@@ -133,6 +165,9 @@ const SellAgent = () => {
                 </div>
                 <h1>Deploy your agent.</h1>
                 <p>Register your autonomous agent on the OpenAgent registry. Provide technical specs to help builders discover your work.</p>
+                <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(5b, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: '#60a5fa', fontSize: '14px', fontWeight: 'bold' }}>
+                    {bondText}
+                </div>
             </header>
 
             <form onSubmit={handleSubmit} className="deploy-form">
@@ -243,6 +278,20 @@ const SellAgent = () => {
                         <span>Economic Configuration</span>
                     </div>
                     <div className="input-grid">
+                        <div className="input-group">
+                            <label>Monetization Model</label>
+                            <select name="pricingModel" className="input-field select-field" value={formData.pricingModel} onChange={handleChange}>
+                                <option value="ONE_TIME">One-Time Asset Purchase</option>
+                                <option value="RECURRING">Subscription (30 Days)</option>
+                            </select>
+                        </div>
+                        <div className="input-group">
+                            <label>Delivery Method</label>
+                            <select name="deliveryType" className="input-field select-field" value={formData.deliveryType} onChange={handleChange}>
+                                <option value="DOWNLOAD">Source Code Download (.zip)</option>
+                                <option value="API">API Key Access (Hosted)</option>
+                            </select>
+                        </div>
                         <div className="input-group">
                             <label>Listing Price</label>
                             <div className="input-with-icon">
@@ -363,6 +412,22 @@ const SellAgent = () => {
                 <button type="submit" className="deploy-btn" disabled={submitting}>
                     {submitting ? 'DEPLOYING TO REGISTRY...' : 'DEPLOY AGENT'}
                 </button>
+
+                {error && (
+                    <div className="error-message animate-shake" style={{
+                        color: '#ff4d4d',
+                        marginTop: '16px',
+                        background: 'rgba(255, 77, 77, 0.1)',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        border: '1px solid rgba(255, 77, 77, 0.2)',
+                        textAlign: 'center'
+                    }}>
+                        <AlertCircle size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                        {error}
+                    </div>
+                )}
 
             </form>
         </div>

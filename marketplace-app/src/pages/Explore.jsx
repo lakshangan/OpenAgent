@@ -5,10 +5,11 @@ import { Search, Sparkles, Filter } from 'lucide-react';
 import './Explore.css';
 
 const Explore = () => {
-    const { marketplaceAgents } = useWallet();
+    const { marketplaceAgents, loadMarketplaceData } = useWallet();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('Recently Listed');
+    const [showExperimental, setShowExperimental] = useState(false);
 
     const categories = useMemo(() => {
         const cats = marketplaceAgents.map(a => a.role);
@@ -101,7 +102,19 @@ const Explore = () => {
                         <div className="results-count">
                             {filteredAgents.length} {filteredAgents.length === 1 ? 'AGENT' : 'AGENTS'} IDENTIFIED
                         </div>
-                        <div style={{ display: 'flex', gap: '24px' }}>
+                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={showExperimental}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setShowExperimental(checked);
+                                        loadMarketplaceData(checked);
+                                    }}
+                                />
+                                Show Experimental
+                            </label>
                             <select
                                 className="sort-select"
                                 value={sortBy}

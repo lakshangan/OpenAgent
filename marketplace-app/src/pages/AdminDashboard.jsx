@@ -30,6 +30,7 @@ const AdminDashboard = () => {
     });
     const [transactions, setTransactions] = useState([]);
     const [users, setUsers] = useState([]);
+    const [pendingAgents, setPendingAgents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -51,15 +52,17 @@ const AdminDashboard = () => {
             const token = localStorage.getItem('jwtToken');
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            const [statsRes, txRes, usersRes] = await Promise.all([
+            const [statsRes, txRes, usersRes, pendingRes] = await Promise.all([
                 fetch(`${API_URL}/api/admin/stats`, { headers }),
                 fetch(`${API_URL}/api/admin/transactions`, { headers }),
-                fetch(`${API_URL}/api/admin/users`, { headers })
+                fetch(`${API_URL}/api/admin/users`, { headers }),
+                fetch(`${API_URL}/api/admin/pending`, { headers })
             ]);
 
             if (statsRes.ok) setStats(await statsRes.json());
             if (txRes.ok) setTransactions(await txRes.json());
             if (usersRes.ok) setUsers(await usersRes.json());
+            if (pendingRes.ok) setPendingAgents(await pendingRes.json());
 
         } catch (error) {
             console.error("Dashboard Sync Error:", error);
@@ -198,6 +201,54 @@ const AdminDashboard = () => {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div className="dashboard-panel" style={{ width: '100%', marginTop: '24px' }}>
+                    <div className="panel-header">
+                        <h2>Pending Agent Reviews</h2>
+                        <span style={{ fontSize: '12px', color: '#f59e0b' }}>{pendingAgents.length} pending approval</span>
+                    </div>
+                    <div className="data-table-wrapper">
+                        {pendingAgents.length === 0 ? (
+                            <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>No agents pending review.</div>
+                        ) : (
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent Name</th>
+                                        <th>Creator</th>
+                                        <th>Trust Tier</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pendingAgents.map((pa, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontWeight: 'bold', color: '#38bdf8' }}>{pa.name}</td>
+                                            <td>@{pa.creator || pa.owner}</td>
+                                            <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>{pa.trustTier}</td>
+                                            <td>
+                                                <button
+                                                    style={{ background: '#10b981', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', marginRight: '8px', cursor: 'pointer' }}
+                                                    onClick={async () => {
+                                                        const res = await fetch(`${API_URL}/api/admin/pending/${pa._id || pa.id}/approve`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` } });
+                                                        if (res.ok) fetchData();
+                                                    }}
+                                                >Approve</button>
+                                                <button
+                                                    style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                                                    onClick={async () => {
+                                                        const res = await fetch(`${API_URL}/api/admin/pending/${pa._id || pa.id}/reject`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` } });
+                                                        if (res.ok) fetchData();
+                                                    }}
+                                                >Reject</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
             </div>

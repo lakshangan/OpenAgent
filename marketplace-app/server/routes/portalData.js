@@ -4,6 +4,7 @@ const Agent = require('../models/Agent');
 const Purchase = require('../models/Purchase');
 const User = require('../models/User');
 const portalAuth = require('../middleware/portalAuthMiddleware');
+const { ethers } = require('ethers');
 
 // All routes here are protected by Portal Email/Pass Auth
 router.use(portalAuth);
@@ -26,7 +27,8 @@ router.get('/stats', async (req, res) => {
             agents: totalAgents,
             users: totalUsers,
             sales: totalPurchases,
-            volume: totalVolume.toFixed(2) + ' ETH'
+            volume: totalVolume.toFixed(2) + ' ETH',
+            registryAddress: process.env.CONTRACT_ADDRESS || ''
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch portal stats' });
@@ -72,58 +74,56 @@ router.get('/purchases', async (req, res) => {
 router.get('/disputes', async (req, res) => {
     try {
         const disputes = await Purchase.find({ status: 'disputed' }).sort({ disputeDate: -1 });
+        const abi = ["function resolveDispute(uint256 _escrowId, uint256 _buyerPayout, uint256 _creatorPayout) external"];
+        const iface = new ethers.Interface(abi);
+
         const enriched = await Promise.all(disputes.map(async (d) => {
             let agent = null;
             try {
                 if (d.agentId) agent = await Agent.findOne({ id: d.agentId });
             } catch (e) { }
+
+            const priceEth = agent ? agent.price : '0';
+            const escrowId = d.escrowId || 1;
+
+            let payloadAccept = "";
+            let payloadReject = "";
+
+            try {
+                const amountWei = ethers.parseEther(priceEth.toString());
+                payloadAccept = iface.encodeFunctionData("resolveDispute", [escrowId, amountWei, 0]);
+                payloadReject = iface.encodeFunctionData("resolveDispute", [escrowId, 0, amountWei]);
+            } catch (e) {
+                payloadAccept = "Error generating payload";
+                payloadReject = "Error generating payload";
+            }
+
             return {
                 ...d.toObject(),
+                escrowId,
                 agentName: agent ? agent.name : 'Unknown Agent',
-                seller: agent ? (agent.owner || agent.creator) : 'Unknown'
+                seller: agent ? (agent.owner || agent.creator) : 'Unknown',
+                price: priceEth,
+                payloadAccept,
+                payloadReject,
+                targetContract: process.env.CONTRACT_ADDRESS || ''
             };
         }));
-        res.json(enriched);
+        // Inject the env contract address for the frontend payload builder
+        res.json({ disputes: enriched, registryAddress: process.env.CONTRACT_ADDRESS });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch disputes' });
     }
 });
 
-// Smart Contract arbitration helper
-const executeEscrowArbitration = async (agentId, buyerAddress, favorBuyer) => {
-    try {
-        const { ethers } = require('ethers');
-        const privateKey = process.env.ADMIN_PRIVATE_KEY;
-        if (!privateKey) {
-            console.log("⚠️ Skipping on-chain escrow arbitration: ADMIN_PRIVATE_KEY missing.");
-            return true;
-        }
-
-        const provider = new ethers.JsonRpcProvider(process.env.BASE_SEPOLIA_RPC);
-        const wallet = new ethers.Wallet(privateKey, provider);
-        const abi = ["function resolveEscrow(uint256 _agentId, address _buyer, bool _favorBuyer) external"];
-        const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
-
-        console.log(`📡 Sending arbitration to contract for Agent ${agentId} - Favor Buyer: ${favorBuyer}`);
-        const tx = await contract.resolveEscrow(agentId, buyerAddress, favorBuyer);
-        await tx.wait();
-        console.log(`✅ Arbitration executed on-chain. TX Hash: ${tx.hash}`);
-        return true;
-    } catch (err) {
-        console.error("❌ On-chain Escrow Error:", err);
-        return false;
-    }
-};
+// Smart Contract execution removed. Must use Safe UI payload generated on the frontend.
 
 // RESOLVE Dispute (Buyer was right, Seller is a scammer)
+// Marks as refunded in DB, but actual settlement requires Safe MultiSig execution
 router.post('/disputes/:id/resolve', async (req, res) => {
     try {
         const purchase = await Purchase.findById(req.params.id);
         if (!purchase || purchase.status !== 'disputed') return res.status(404).json({ error: 'Dispute not found' });
-
-        // Trigger on-chain arbitration (true = refund buyer)
-        const ok = await executeEscrowArbitration(purchase.agentId, purchase.buyer || purchase.disputedBy, true);
-        if (!ok) return res.status(500).json({ error: 'Smart contract escrow transaction failed' });
 
         purchase.status = 'refunded';
         await purchase.save();
@@ -135,7 +135,7 @@ router.post('/disputes/:id/resolve', async (req, res) => {
             await trustEngine.updateTrustScore(seller, -5.0, 'marketplace_outcome', 'admin');
         }
 
-        res.json({ success: true, message: 'Dispute resolved in favor of buyer. Seller slashed.' });
+        res.json({ success: true, message: 'Dispute resolved locally. Action required on-chain via Safe.' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed' });
@@ -143,14 +143,11 @@ router.post('/disputes/:id/resolve', async (req, res) => {
 });
 
 // REJECT Dispute (Buyer was lying/spamming, Seller is innocent)
+// Marks as completed in DB, but actual settlement requires Safe MultiSig execution
 router.post('/disputes/:id/reject', async (req, res) => {
     try {
         const purchase = await Purchase.findById(req.params.id);
         if (!purchase || purchase.status !== 'disputed') return res.status(404).json({ error: 'Dispute not found' });
-
-        // Trigger on-chain arbitration (false = pay seller out of escrow)
-        const ok = await executeEscrowArbitration(purchase.agentId, purchase.buyer || purchase.disputedBy, false);
-        if (!ok) return res.status(500).json({ error: 'Smart contract escrow transaction failed' });
 
         purchase.status = 'completed';
         await purchase.save();
@@ -158,10 +155,42 @@ router.post('/disputes/:id/reject', async (req, res) => {
         const trustEngine = require('../utils/trustEngine');
         await trustEngine.updateTrustScore(purchase.disputedBy, -3.0, 'marketplace_outcome', 'admin');
 
-        res.json({ success: true, message: 'Dispute rejected in favor of seller. Malicious buyer slashed.' });
+        res.json({ success: true, message: 'Dispute rejected locally. Action required on-chain via Safe.' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed' });
+    }
+});
+
+// GET all PENDING_REVIEW agents
+router.get('/pending', async (req, res) => {
+    try {
+        const pending = await Agent.find({ status: 'PENDING_REVIEW' }).sort({ dateCreated: -1 });
+        res.json(pending);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch pending agents' });
+    }
+});
+
+// Admin Review Actions
+router.post('/pending/:id/:action', async (req, res) => {
+    try {
+        const agent = await Agent.findById(req.params.id);
+        if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+        const action = req.params.action;
+        if (action === 'approve') {
+            agent.status = 'LISTED';
+        } else if (action === 'reject') {
+            agent.status = 'REJECTED';
+        } else {
+            return res.status(400).json({ error: 'Invalid action' });
+        }
+
+        await agent.save();
+        res.json({ success: true, message: `Agent ${action}d successfully.`, status: agent.status });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to process review' });
     }
 });
 

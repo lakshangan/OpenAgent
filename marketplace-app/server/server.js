@@ -19,6 +19,7 @@ const purchaseRoutes = require('./routes/purchases');
 const adminRoutes = require('./routes/admin');
 const portalAuthRoutes = require('./routes/portalAuth');
 const portalDataRoutes = require('./routes/portalData');
+const apiKeyRoutes = require('./routes/api-keys');
 
 // Initialize Database
 connectDB();
@@ -44,6 +45,7 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/portal/auth', portalAuthRoutes);
 app.use('/api/portal/data', portalDataRoutes);
+app.use('/api/api-keys', apiKeyRoutes);
 
 // --- Production Ready Static File Serving ---
 // Serve the Admin Portal build specifically on the /portal path

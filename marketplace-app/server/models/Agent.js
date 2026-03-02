@@ -12,8 +12,11 @@ const agentSchema = new mongoose.Schema({
     model: String,
     tags: [String],
     dateCreated: { type: Date, default: Date.now },
-    status: { type: String, default: 'Active' },
+    status: { type: String, default: 'LISTED' }, // LISTED, PENDING_REVIEW, DELISTED
+    trustScore: { type: Number, default: 0 },
+    trustTier: { type: String, default: 'EXPERIMENTAL' },
     image: String,
+    gallery: [String],
     github: String,
     version: String,
     contextWindow: String,
@@ -22,13 +25,18 @@ const agentSchema = new mongoose.Schema({
     apiDependencies: String,
     inferenceService: String,
     license: String,
+    pricingModel: { type: String, default: 'ONE_TIME' },
+    deliveryType: { type: String, default: 'DOWNLOAD' },
     videoLink: String,
     website: String,
     discord: String,
     telegram: String,
     docs: String,
     codeFile: String,
-    txHash: String
+    txHash: String,
+    artifactHash: String,
+    fileUrl: String,
+    fileSha256: String
 }, { collection: 'agents' });
 
 module.exports = mongoose.model('Agent', agentSchema);

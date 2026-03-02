@@ -2,6 +2,7 @@ const Config = require('./constants');
 const User = require('../models/User');
 const Agent = require('../models/Agent');
 const ForumPost = require('../models/ForumPost');
+const { syncTrustToChain } = require('./ChainSync');
 
 /**
  * TrustEngine - A modular system for calculating and managing user reputation.
@@ -21,6 +22,13 @@ class TrustEngine {
 
     getRollingContributionPoints(user) {
         return user.contribution_points_rolling_30d || 0;
+    }
+
+    getTrustTier(score) {
+        if (score >= 200) return 'VERIFIED';
+        if (score >= 100) return 'REVIEWED';
+        if (score >= 50) return 'EXPERIMENTAL';
+        return 'RESTRICTED';
     }
 
     computeDecay(user, visibleTrust) {
@@ -92,7 +100,21 @@ class TrustEngine {
         const decay = this.computeDecay(user, visibleNow);
 
         const finalH = h + contributionBoost + stakeBoost + agentBoost - decay;
-        return this.mappingHiddenToVisible(finalH);
+        const finalScore = this.mappingHiddenToVisible(finalH);
+
+        const tier = this.getTrustTier(finalScore);
+
+        // Cache on user
+        if (user.trustScore !== finalScore || user.trustTier !== tier) {
+            user.trustScore = finalScore;
+            user.trustTier = tier;
+            await user.save();
+
+            // Sync to blockchain asynchronously
+            syncTrustToChain(user.address, finalScore).catch(console.error);
+        }
+
+        return finalScore;
     }
 
     async updateTrustScore(username, outcomeValue, type = 'general', sourceUser = null) {
@@ -153,7 +175,11 @@ class TrustEngine {
             user.last_activity_at = new Date();
 
             await user.save();
-            return this.mappingHiddenToVisible(user.hidden_rating);
+            const visible = this.mappingHiddenToVisible(user.hidden_rating);
+            user.trustScore = visible;
+            user.trustTier = this.getTrustTier(visible);
+            await user.save();
+            return visible;
         }
     }
 }
