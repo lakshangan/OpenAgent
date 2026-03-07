@@ -320,7 +320,7 @@ const Dashboard = () => {
                                 position: 'absolute',
                                 bottom: '-10px',
                                 right: '-10px',
-                                background: user?.trustTier === 'VERIFIED' ? '#6366f1' : '#1a1a1a',
+                                background: user?.trustTier === 'TOP CREATOR' ? '#6366f1' : '#1a1a1a',
                                 borderRadius: '24px',
                                 padding: '10px 20px',
                                 border: '4px solid #000',
@@ -331,7 +331,7 @@ const Dashboard = () => {
                             }}>
                                 <Shield size={16} color="#fff" />
                                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#fff' }}>
-                                    {user?.trustTier || 'RESTRICTED'}
+                                    {user?.trustTier || 'STARTER'}
                                 </span>
                             </div>
                         </div>
@@ -342,7 +342,7 @@ const Dashboard = () => {
                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
                                 <div style={{ fontSize: '32px', fontWeight: '950', color: '#fff', letterSpacing: '-0.05em' }}>@{username || account?.slice(0, 8)}</div>
-                                {user?.trustTier === 'VERIFIED' && (
+                                {user?.trustTier === 'TOP CREATOR' && (
                                     <div style={{ background: '#6366f1', color: '#fff', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' }}>
                                         <Shield size={14} fill="currentColor" />
                                     </div>
@@ -486,7 +486,7 @@ const Dashboard = () => {
                 <div className="animate-fade-in">
                     {activeTab === 'deployments' && (
                         myAgents.length > 0 ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '32px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}>
                                 {myAgents.map((agent) => (
                                     <div
                                         key={agent.id}
@@ -520,7 +520,7 @@ const Dashboard = () => {
                                             <div style={{ textAlign: 'right' }}>
                                                 <div style={{ fontSize: '10px', color: '#444', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase' }}>Protocol Status</div>
                                                 <div style={{ fontWeight: '900', color: '#6366f1', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                                                    <CheckCircle2 size={12} /> VERIFIED
+                                                    <CheckCircle2 size={12} /> TOP CREATOR
                                                 </div>
                                             </div>
                                         </div>
@@ -571,7 +571,7 @@ const Dashboard = () => {
                                 <Package size={48} style={{ opacity: 0.1, marginBottom: '24px' }} />
                                 <h3 style={{ fontSize: '24px', fontWeight: '950', color: '#fff', marginBottom: '16px' }}>No Entities Discovered</h3>
                                 <p style={{ color: '#666', marginBottom: '40px', fontSize: '16px' }}>Your private registry is empty. Deploy your craft to the globally verified marketplace.</p>
-                                <Link to="/sell" className="btn btn-primary" style={{ padding: '0 40px', height: '56px', borderRadius: '14px' }}>Deploy First Agent</Link>
+                                <Link to="/sell" className="btn btn-primary" style={{ padding: '0 24px', height: '46px', borderRadius: '12px' }}>List First Agent</Link>
                             </div>
                         )
                     )}
@@ -810,10 +810,10 @@ const Dashboard = () => {
                             {/* Tier Selection - Redesigned as Subscription Tiers */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
                                 {[
-                                    { tier: 'RESTRICTED', price: '0.00', score: '0+', color: '#333', perks: ['Basic Search', 'Limited Builds', 'Base Fees'] },
-                                    { tier: 'EXPERIMENTAL', price: '0.05', score: '30+', color: '#f59e0b', perks: ['Apprentice Badge', '3 Active Builds', 'Lower Bond'] },
-                                    { tier: 'REVIEWED', price: '0.20', score: '60+', color: '#38bdf8', perks: ['Expert Badge', 'Verified Logic', '1.5x Bond'] },
-                                    { tier: 'VERIFIED', price: '0.50', score: '150+', color: '#6366f1', perks: ['Protocol Pioneer', 'Priority Marketplace', '1.0x Bond'] }
+                                    { tier: 'STARTER', price: '0.00', score: '0+', color: '#333', perks: ['Basic Search', 'Limited Builds', 'Base Fees'] },
+                                    { tier: 'VERIFIED', price: '0.05', score: '30+', color: '#f59e0b', perks: ['Apprentice Badge', '3 Active Builds', 'Lower Bond'] },
+                                    { tier: 'TRUSTED', price: '0.20', score: '60+', color: '#38bdf8', perks: ['Expert Badge', 'Verified Logic', '1.5x Bond'] },
+                                    { tier: 'TOP CREATOR', price: '0.50', score: '150+', color: '#6366f1', perks: ['Protocol Pioneer', 'Priority Marketplace', '1.0x Bond'] }
                                 ].map((t, i) => (
                                     <div key={i} style={{
                                         padding: '40px',
@@ -956,7 +956,7 @@ const Dashboard = () => {
                                     <div style={{ marginTop: 'auto', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', fontSize: '12px', color: '#555', lineHeight: '1.6', textAlign: 'center' }}>
                                         <Info size={16} style={{ marginBottom: '8px', opacity: 0.3 }} />
                                         <br />
-                                        Your buyer confidence ranking is currently in the <strong>Top 15%</strong> of the network. Stake more to reach <strong>VERIFIED</strong>.
+                                        Your buyer confidence ranking is currently in the <strong>Top 15%</strong> of the network. Stake more to reach <strong>TOP CREATOR</strong>.
                                     </div>
                                 </div>
                             </div>

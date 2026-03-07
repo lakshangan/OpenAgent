@@ -34,74 +34,88 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="container nav-content">
-                <Link to="/" className="logo">
+                <Link to={location.pathname === '/welcome' ? "/welcome" : "/"} className="logo">
                     <Terminal size={22} color="#fff" />
                     <span>OpenAgent</span>
                 </Link>
 
-                <div className="nav-links">
-                    <Link to="/explore" className={`nav-link ${location.pathname === '/explore' ? 'active' : ''}`}>Marketplace</Link>
-                    <div className="nav-link disabled" style={{ opacity: 0.3, cursor: 'not-allowed', position: 'relative' }}>
-                        Auctions
-                        <span style={{ fontSize: '7px', position: 'absolute', top: '-4px', right: '-12px', background: '#6366f1', color: '#fff', padding: '2px 4px', borderRadius: '4px', fontWeight: '900' }}>SOON</span>
+                {location.pathname !== '/welcome' && (
+                    <div className="nav-links">
+                        <Link to="/explore" className={`nav-link ${location.pathname === '/explore' ? 'active' : ''}`}>Marketplace</Link>
+                        <div className="nav-link disabled" style={{ opacity: 0.3, cursor: 'not-allowed', position: 'relative' }}>
+                            Auctions
+                            <span style={{ fontSize: '7px', position: 'absolute', top: '-4px', right: '-12px', background: '#6366f1', color: '#fff', padding: '2px 4px', borderRadius: '4px', fontWeight: '900' }}>SOON</span>
+                        </div>
+                        <Link to="/sell" className={`nav-link ${location.pathname === '/sell' ? 'active' : ''}`}>List Agent</Link>
+                        <Link to="/forum" className={`nav-link ${location.pathname === '/forum' ? 'active' : ''}`}>Forum</Link>
                     </div>
-                    <Link to="/sell" className={`nav-link ${location.pathname === '/sell' ? 'active' : ''}`}>Deploy</Link>
-                    <Link to="/forum" className={`nav-link ${location.pathname === '/forum' ? 'active' : ''}`}>Forum</Link>
-                </div>
+                )}
 
                 <div className="nav-actions" style={{ display: 'flex', gap: '12px' }}>
-                    <div
-                        className={`btn ${isConnected ? 'btn-outline' : 'btn-primary'}`}
-                        style={{ height: '42px', padding: '0 20px', fontSize: '13px', borderRadius: '12px', cursor: isConnected && username ? 'pointer' : 'default' }}
-                        onClick={() => {
-                            if (!isConnected) handleConnect();
-                            else if (username) navigate('/dashboard');
-                        }}
-                    >
-                        {isConnected ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                {username ? (
-                                    <>
-                                        <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', fontSize: '12px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Mail size={12} style={{ opacity: 0.6 }} />
-                                            @{username}
-                                        </div>
-                                        <span style={{ color: '#444' }}>|</span>
-                                    </>
-                                ) : (
-                                    <ShieldCheck size={14} color="#ff4d4d" />
-                                )}
-                                <span style={{ opacity: 0.6, fontSize: '11px' }}>
-                                    {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : ''}
-                                </span>
-                            </div>
-                        ) : (
-                            <>
-                                <User size={16} style={{ marginRight: '8px' }} />
-                                Connect Wallet
-                            </>
-                        )}
-                    </div>
-
-                    {isConnected && (
+                    {location.pathname === '/welcome' ? (
                         <button
-                            className="btn btn-outline"
-                            onClick={handleConnect}
-                            style={{
-                                width: '42px',
-                                height: '42px',
-                                padding: 0,
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderColor: 'rgba(255, 77, 77, 0.2)',
-                                color: '#ff4d4d'
-                            }}
-                            title="Disconnect Session"
+                            className="btn btn-primary"
+                            style={{ height: '42px', padding: '0 20px', fontSize: '13px', borderRadius: '12px' }}
+                            onClick={() => navigate('/')}
                         >
-                            <LogOut size={16} />
+                            Explore Application
                         </button>
+                    ) : (
+                        <>
+                            <div
+                                className={`btn ${isConnected ? 'btn-outline' : 'btn-primary'}`}
+                                style={{ height: '42px', padding: '0 20px', fontSize: '13px', borderRadius: '12px', cursor: isConnected && username ? 'pointer' : 'default' }}
+                                onClick={() => {
+                                    if (!isConnected) handleConnect();
+                                    else if (username) navigate('/dashboard');
+                                }}
+                            >
+                                {isConnected ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        {username ? (
+                                            <>
+                                                <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', fontSize: '12px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <Mail size={12} style={{ opacity: 0.6 }} />
+                                                    @{username}
+                                                </div>
+                                                <span style={{ color: '#444' }}>|</span>
+                                            </>
+                                        ) : (
+                                            <ShieldCheck size={14} color="#ff4d4d" />
+                                        )}
+                                        <span style={{ opacity: 0.6, fontSize: '11px' }}>
+                                            {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : ''}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <User size={16} style={{ marginRight: '8px' }} />
+                                        Connect Wallet
+                                    </>
+                                )}
+                            </div>
+
+                            {isConnected && (
+                                <button
+                                    className="btn btn-outline"
+                                    onClick={handleConnect}
+                                    style={{
+                                        width: '42px',
+                                        height: '42px',
+                                        padding: 0,
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderColor: 'rgba(255, 77, 77, 0.2)',
+                                        color: '#ff4d4d'
+                                    }}
+                                    title="Disconnect Session"
+                                >
+                                    <LogOut size={16} />
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

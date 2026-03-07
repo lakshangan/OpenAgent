@@ -1,9 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
-import { Sparkles, ArrowRight, Zap, Coffee } from 'lucide-react';
+import { Sparkles, Zap, Coffee } from 'lucide-react';
 
-const Hero = () => {
+const WelcomeHero = () => {
     const { username } = useWallet();
     const displayName = username ? `@${username}` : 'the collective';
 
@@ -75,40 +74,6 @@ const Hero = () => {
                     Discover high-performance logic crafted by independent builders worldwide.
                 </p>
 
-                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                    <Link to="/explore" className="btn btn-primary" style={{
-                        height: '48px',
-                        padding: '0 32px',
-                        fontSize: '14px',
-                        borderRadius: '12px',
-                        background: '#fff',
-                        color: '#000',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        fontWeight: '900',
-                        boxShadow: '0 10px 20px rgba(255, 255, 255, 0.1)'
-                    }}>
-                        Explore the Craft
-                        <ArrowRight size={18} />
-                    </Link>
-                    <Link to="/sell" className="btn btn-outline" style={{
-                        height: '48px',
-                        padding: '0 32px',
-                        fontSize: '14px',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        fontWeight: '800'
-                    }}>
-                        List Agent
-                    </Link>
-                </div>
-
                 {/* Floating Micro-detail elements */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '100px', padding: '40px 0', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: '700' }}>
@@ -125,4 +90,4 @@ const Hero = () => {
     );
 };
 
-export default Hero;
+export default WelcomeHero;

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import AgentCard from '../components/AgentCard';
 import { useWallet } from '../context/WalletContext';
 import { Search, Sparkles, Filter } from 'lucide-react';
+import { PROTOCOL_DOMAINS } from '../config';
 import './Explore.css';
 
 const Explore = () => {
@@ -12,15 +13,16 @@ const Explore = () => {
     const [showExperimental, setShowExperimental] = useState(false);
 
     const categories = useMemo(() => {
-        const cats = marketplaceAgents.map(a => a.role);
-        return ['All', ...new Set(cats)];
-    }, [marketplaceAgents]);
+        // Use predefined domains as primary categories
+        return ['All', ...PROTOCOL_DOMAINS, 'Other'];
+    }, []);
 
     const filteredAgents = useMemo(() => {
         let filtered = marketplaceAgents.filter(a => {
             const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 a.role.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = activeCategory === 'All' || a.role === activeCategory;
+            const matchesCategory = activeCategory === 'All' ||
+                (activeCategory === 'Other' ? !PROTOCOL_DOMAINS.includes(a.role) : a.role === activeCategory);
             return matchesSearch && matchesCategory;
         });
 
@@ -40,6 +42,7 @@ const Explore = () => {
 
     const getCategoryCount = (cat) => {
         if (cat === 'All') return marketplaceAgents.length;
+        if (cat === 'Other') return marketplaceAgents.filter(a => !PROTOCOL_DOMAINS.includes(a.role)).length;
         return marketplaceAgents.filter(a => a.role === cat).length;
     };
 

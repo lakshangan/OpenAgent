@@ -255,7 +255,7 @@ const Forum = () => {
                                     <div className="gram-avatar small">{username?.charAt(0).toUpperCase()}</div>
                                     <textarea
                                         className="gram-textarea"
-                                        placeholder="Deploying a new agent? Share it here..."
+                                        placeholder="Listing a new agent? Share it here..."
                                         value={newPostContent}
                                         onChange={(e) => setNewPostContent(e.target.value)}
                                     />

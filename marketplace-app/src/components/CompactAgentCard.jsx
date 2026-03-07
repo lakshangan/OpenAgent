@@ -8,8 +8,8 @@ const CompactAgentCard = ({ agent }) => {
     // Deterministic status colors
     const getStatusStyle = (tier) => {
         switch (tier) {
-            case 'VERIFIED': return { bg: '#10b981', text: '#fff' };
-            case 'REVIEWED': return { bg: '#3b82f6', text: '#fff' };
+            case 'TOP CREATOR': return { bg: '#10b981', text: '#fff' };
+            case 'TRUSTED': return { bg: '#3b82f6', text: '#fff' };
             default: return { bg: '#f59e0b', text: '#fff' };
         }
     };
@@ -27,7 +27,7 @@ const CompactAgentCard = ({ agent }) => {
 
             <div className="compact-details-area">
                 <div className="compact-status-pill" style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}>
-                    {agent.trustTier || 'RESTRICTED'} • {agent.trustScore || 10}
+                    {agent.trustTier || 'STARTER'} • {agent.trustScore || 10}
                 </div>
 
                 <div className="compact-main-info">

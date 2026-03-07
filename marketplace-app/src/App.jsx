@@ -10,6 +10,7 @@ import Identity from './pages/Identity';
 import Admin from './pages/Admin';
 import Dashboard from './pages/Dashboard';
 import Forum from './pages/Forum';
+import Landing from './pages/Landing';
 import Footer from './components/Footer';
 import { WalletProvider } from './context/WalletContext';
 import { useEffect } from 'react';
@@ -23,31 +24,40 @@ const ScrollToTop = () => {
   return null;
 };
 
+const Content = () => {
+  const location = useLocation();
+  const isWelcomePage = location.pathname === '/welcome';
+
+  return (
+    <div className="app-layout">
+      <Navbar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/welcome" element={<Landing />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/auctions" element={<Home />} />
+          <Route path="/auction/:id" element={<Home />} />
+          <Route path="/sell" element={<SellAgent />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/agent/:id" element={<AgentDetails />} />
+          <Route path="/identity" element={<Identity />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/forum" element={<Forum />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+      {!isWelcomePage && <Footer />}
+    </div>
+  );
+};
+
 function App() {
   return (
     <WalletProvider>
       <Router>
         <ScrollToTop />
-        <div className="app-layout">
-          <Navbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/explore" element={<Explore />} />
-              {/* Auctions Coming Soon */}
-              <Route path="/auctions" element={<Home />} />
-              <Route path="/auction/:id" element={<Home />} />
-              <Route path="/sell" element={<SellAgent />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/agent/:id" element={<AgentDetails />} />
-              <Route path="/identity" element={<Identity />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/forum" element={<Forum />} />
-              <Route path="*" element={<Home />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <Content />
       </Router>
     </WalletProvider>
   )

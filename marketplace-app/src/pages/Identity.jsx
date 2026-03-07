@@ -137,17 +137,17 @@ const Identity = () => {
                         className="btn btn-primary"
                         style={{
                             width: '100%',
-                            height: '72px',
-                            borderRadius: '24px',
+                            height: '54px',
+                            borderRadius: '16px',
                             background: '#6366f1',
-                            fontSize: '16px',
+                            fontSize: '14px',
                             fontWeight: '950',
                             letterSpacing: '0.05em',
                             textTransform: 'uppercase',
                             boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)'
                         }}
                     >
-                        {isSubmitting ? 'SECURE_REGISTRY...' : 'INITIALIZE IDENTITY'}
+                        {isSubmitting ? 'SECURE_REGISTRY...' : 'Claim Identity'}
                     </button>
                 </form>
 

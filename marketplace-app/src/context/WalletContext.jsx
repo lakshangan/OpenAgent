@@ -432,7 +432,7 @@ export const WalletProvider = ({ children }) => {
 
             const multiplier = await contract.getBondMultiplier(account);
             if (multiplier === 0n || multiplier === 0) {
-                return { success: false, error: "Your account is RESTRICTED (Trust Score < 50). You cannot list agents." };
+                return { success: false, error: "Your account is STARTER (Trust Score < 50). You cannot list agents." };
             }
 
             // Fetch listing bond from contract
@@ -495,9 +495,20 @@ export const WalletProvider = ({ children }) => {
                 });
             }
 
-            const extras = ['version', 'contextWindow', 'architecture', 'inferenceService', 'videoLink', 'website', 'discord', 'telegram', 'docs', 'pricingModel', 'deliveryType', 'github'];
+            const extras = [
+                'tagline', 'useCase', 'capabilities', 'agentType', 'aiModel',
+                'runtime', 'dockerRequired', 'gpuRequired', 'externalApis',
+                'dependencies', 'deploymentComplexity', 'interval',
+                'sourceVisibility', 'support', 'updateFrequency',
+                'version', 'contextWindow', 'architecture', 'inferenceService',
+                'videoLink', 'website', 'discord', 'telegram', 'docs',
+                'pricingModel', 'deliveryType', 'github', 'apiDependencies'
+            ];
             extras.forEach(ext => {
-                if (agentData[ext]) formData.append(ext, agentData[ext]);
+                if (agentData[ext] !== undefined && agentData[ext] !== null) {
+                    const val = typeof agentData[ext] === 'object' ? JSON.stringify(agentData[ext]) : agentData[ext];
+                    formData.append(ext, val);
+                }
             });
 
             formData.append('tags', JSON.stringify(agentData.tags || []));

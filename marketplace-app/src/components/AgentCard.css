@@ -20,7 +20,7 @@
 
 .agent-image-container {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 3;
     position: relative;
     overflow: hidden;
     background: #111;
@@ -44,7 +44,7 @@
 }
 
 .agent-content-area {
-    padding: 24px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -64,7 +64,7 @@
 }
 
 .agent-display-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 900;
     color: #fff;
     margin: 0 0 10px 0;
@@ -72,7 +72,7 @@
 }
 
 .agent-brief-description {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
     line-height: 1.6;
     margin: 0 0 24px 0;
