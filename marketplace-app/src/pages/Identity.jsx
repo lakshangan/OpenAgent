@@ -153,7 +153,7 @@ const Identity = () => {
 
                 <div style={{ marginTop: '48px', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', color: '#333' }}>
                     <ShieldCheck size={16} color="#6366f1" />
-                    <span style={{ fontSize: '10px', fontWeight: '950', letterSpacing: '0.15em', textTransform: 'uppercase' }}>DECENTRALIZED AUTHORITY VERIFIED</span>
+                    <span style={{ fontSize: '10px', fontWeight: '950', letterSpacing: '0.15em', textTransform: 'uppercase' }}>DECENTRALIZED AUTHORITY AUTHENTICATED</span>
                 </div>
             </div>
         </div>

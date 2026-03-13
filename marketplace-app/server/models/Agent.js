@@ -36,7 +36,9 @@ const agentSchema = new mongoose.Schema({
     txHash: String,
     artifactHash: String,
     fileUrl: String,
-    fileSha256: String
+    fileSha256: String,
+    inferencePrice: { type: Number, default: 0.05 }, // x402 price in USDC
+    payoutAddress: String // Wallet to receive x402 USDC
 }, { collection: 'agents' });
 
 module.exports = mongoose.model('Agent', agentSchema);

@@ -5,6 +5,19 @@ import { useWallet } from '../context/WalletContext';
 import AgentAvatar from './AgentAvatar';
 import './AgentCard.css';
 
+const normalizeTier = (tier) => {
+    const mapping = {
+        'CORE': 'STARTER',
+        'ACTIVE': 'BUILDER',
+        'RECOGNIZED': 'EXPERT',
+        'ELITE': 'MASTER',
+        'VERIFIED': 'BUILDER',
+        'TRUSTED': 'EXPERT',
+        'TOP CREATOR': 'MASTER'
+    };
+    return mapping[tier] || tier;
+};
+
 const AgentCard = ({ agent }) => {
     const { username, account } = useWallet();
 
@@ -14,13 +27,14 @@ const AgentCard = ({ agent }) => {
     // Deterministic status colors
     const getStatusStyle = (tier) => {
         switch (tier) {
-            case 'TOP CREATOR': return { bg: '#10b981', text: '#fff' };
-            case 'TRUSTED': return { bg: '#3b82f6', text: '#fff' };
-            default: return { bg: '#f59e0b', text: '#fff' };
+            case 'MASTER': return { bg: '#10b981', text: '#fff' };
+            case 'EXPERT': return { bg: '#3b82f6', text: '#fff' };
+            case 'BUILDER': return { bg: '#f59e0b', text: '#fff' };
+            default: return { bg: '#64748b', text: '#fff' };
         }
     };
 
-    const statusStyle = getStatusStyle(agent.trustTier);
+    const statusStyle = getStatusStyle(normalizeTier(agent.trustTier));
 
     return (
         <Link to={`/agent/${agent.id}`} className="agent-item-card">
@@ -33,7 +47,7 @@ const AgentCard = ({ agent }) => {
 
             <div className="agent-content-area">
                 <div className="agent-status-pill" style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}>
-                    {agent.trustTier || 'STARTER'} • {agent.trustScore || 10}
+                    {normalizeTier(agent.trustTier || 'STARTER')} • {agent.trustScore || 10}
                 </div>
 
                 <div className="agent-main-info">

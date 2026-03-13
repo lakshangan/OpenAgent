@@ -8,6 +8,8 @@ const path = require('path');
 // Config & Utils
 const connectDB = require('./config/db');
 const { startIndexer } = require('./indexer');
+const AppError = require('./utils/AppError');
+const errorMiddleware = require('./middleware/errorMiddleware');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -20,6 +22,7 @@ const adminRoutes = require('./routes/admin');
 const portalAuthRoutes = require('./routes/portalAuth');
 const portalDataRoutes = require('./routes/portalData');
 const apiKeyRoutes = require('./routes/api-keys');
+const x402Routes = require('./routes/x402');
 
 // Initialize Database
 connectDB();
@@ -46,6 +49,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/portal/auth', portalAuthRoutes);
 app.use('/api/portal/data', portalDataRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
+app.use('/api/x402', x402Routes);
 
 // --- Production Ready Static File Serving ---
 // Serve the Admin Portal build specifically on the /portal path
@@ -58,22 +62,18 @@ app.use('/portal', (req, res, next) => {
 // Serve the Main App build on root
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Catch-all API 404 to prevent HTML response for unknown APIs
-app.use('/api', (req, res) => {
-    res.status(404).json({ error: 'API endpoint not found' });
+// Catch-all for main app router
+app.all('/api/*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Catch-all for main app router
 app.use((req, res, next) => {
     if (req.method !== 'GET') return next();
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-    console.error("Unhandled Error:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
-});
+// Deployment of Global Error Handler
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
     console.log(`🚀 OpenAgent Backend: http://localhost:${PORT}`);

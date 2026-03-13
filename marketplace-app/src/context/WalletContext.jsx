@@ -432,7 +432,7 @@ export const WalletProvider = ({ children }) => {
 
             const multiplier = await contract.getBondMultiplier(account);
             if (multiplier === 0n || multiplier === 0) {
-                return { success: false, error: "Your account is STARTER (Trust Score < 50). You cannot list agents." };
+                return { success: false, error: "Your account is STARTER (Trust Score < 30). You cannot list agents." };
             }
 
             // Fetch listing bond from contract

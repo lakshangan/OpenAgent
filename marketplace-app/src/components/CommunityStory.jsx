@@ -118,7 +118,7 @@ const CommunityStory = () => {
                         <div className="data-line"></div>
                     </div>
 
-                    {/* COL 3: VERIFIED OUTPUT */}
+                    {/* COL 3: AUTHENTICATED OUTPUT */}
                     <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px 0' }}>
 
                         <div style={{ marginBottom: '16px' }}>
@@ -130,7 +130,7 @@ const CommunityStory = () => {
                             <div className="core-shield" style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #1d9bf0, #0a4270)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(29, 155, 240, 0.4)', marginBottom: '24px' }}>
                                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" /></svg>
                             </div>
-                            <h3 style={{ color: '#fff', fontSize: '24px', fontWeight: '900', marginBottom: '12px' }}>Verified Asset</h3>
+                            <h3 style={{ color: '#fff', fontSize: '24px', fontWeight: '900', marginBottom: '12px' }}>Authenticated Asset</h3>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
                                 Only authentic, high-quality agents survive the engine. You buy with absolute mathematical confidence.
                             </p>

@@ -3,6 +3,19 @@ import { Link } from 'react-router-dom';
 import { MoveRight, Star, TrendingUp, ArrowUpRight } from 'lucide-react';
 import AgentAvatar from './AgentAvatar';
 
+const normalizeTier = (tier) => {
+    const mapping = {
+        'CORE': 'STARTER',
+        'ACTIVE': 'BUILDER',
+        'RECOGNIZED': 'EXPERT',
+        'ELITE': 'MASTER',
+        'VERIFIED': 'BUILDER',
+        'TRUSTED': 'EXPERT',
+        'TOP CREATOR': 'MASTER'
+    };
+    return mapping[tier] || tier;
+};
+
 const TrendingSection = ({ agents }) => {
     const trending = agents.length > 0 ? agents.slice(0, 4) : [];
     if (trending.length === 0) return null;
@@ -36,7 +49,7 @@ const TrendingSection = ({ agents }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {trending.map((agent, i) => (
-                    <Link key={agent.id} to={`/agent/${agent.id}`} style={{
+                    <Link key={agent.id} to={`/agent/${agent.id}`} className="trending-row" style={{
                         display: 'grid',
                         gridTemplateColumns: '60px 2.5fr 1.2fr 1fr 140px',
                         alignItems: 'center',
@@ -47,15 +60,8 @@ const TrendingSection = ({ agents }) => {
                         textDecoration: 'none',
                         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                         position: 'relative',
-                        overflow: 'hidden'
-                    }} onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.035)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                        e.currentTarget.style.transform = 'translateX(8px)';
-                    }} onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.015)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                        e.currentTarget.style.transform = 'translateX(0)';
+                        overflow: 'hidden',
+                        animationDelay: `${i * 0.1}s`
                     }}>
 
                         <span style={{ fontSize: '18px', color: 'rgba(255, 255, 255, 0.15)', fontWeight: '900', fontFamily: 'var(--font-mono)' }}>0{i + 1}</span>
@@ -69,7 +75,7 @@ const TrendingSection = ({ agents }) => {
                                 <div style={{ fontSize: '20px', fontWeight: '900', color: '#fff', marginBottom: '6px', letterSpacing: '-0.02em' }}>{agent.name}</div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
                                     <Star size={12} fill="var(--brand-warm)" color="var(--brand-warm)" />
-                                    <span>Verified Creator</span>
+                                    <span>{normalizeTier(agent.trustTier || 'BUILDER')}</span>
                                     <span style={{ color: 'rgba(255, 255, 255, 0.1)' }}>|</span>
                                     <span>{agent.model || 'GPT-4o'}</span>
                                 </div>

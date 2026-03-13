@@ -32,6 +32,21 @@ const Dashboard = () => {
         }
     }, [isConnected, account]);
 
+    const normalizeTier = (tier) => {
+        const mapping = {
+            'CORE': 'STARTER',
+            'ACTIVE': 'BUILDER',
+            'RECOGNIZED': 'EXPERT',
+            'ELITE': 'MASTER',
+            'VERIFIED': 'BUILDER',
+            'TRUSTED': 'EXPERT',
+            'TOP CREATOR': 'MASTER'
+        };
+        return mapping[tier] || tier;
+    };
+
+    const userTier = useMemo(() => normalizeTier(user?.trustTier || 'STARTER'), [user?.trustTier]);
+
     const myAgents = useMemo(() => {
         if (!isConnected || !account) return [];
         const lowerAccount = account.toLowerCase();
@@ -342,7 +357,7 @@ const Dashboard = () => {
                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
                                 <div style={{ fontSize: '32px', fontWeight: '950', color: '#fff', letterSpacing: '-0.05em' }}>@{username || account?.slice(0, 8)}</div>
-                                {user?.trustTier === 'TOP CREATOR' && (
+                                {userTier === 'MASTER' && (
                                     <div style={{ background: '#6366f1', color: '#fff', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' }}>
                                         <Shield size={14} fill="currentColor" />
                                     </div>
@@ -802,7 +817,7 @@ const Dashboard = () => {
                                     <div style={{ position: 'absolute', textAlign: 'center' }}>
                                         <div style={{ fontSize: '12px', fontWeight: '900', color: '#444', letterSpacing: '0.2em' }}>AUTHORITY</div>
                                         <div style={{ fontSize: '72px', fontWeight: '950', color: '#fff', margin: '-10px 0', letterSpacing: '-0.05em' }}>{trustScore}</div>
-                                        <div style={{ fontSize: '13px', fontWeight: '900', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{user?.trustTier}</div>
+                                        <div style={{ fontSize: '13px', fontWeight: '900', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{userTier}</div>
                                     </div>
                                 </div>
                             </div>
@@ -811,21 +826,21 @@ const Dashboard = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
                                 {[
                                     { tier: 'STARTER', price: '0.00', score: '0+', color: '#333', perks: ['Basic Search', 'Limited Builds', 'Base Fees'] },
-                                    { tier: 'VERIFIED', price: '0.05', score: '30+', color: '#f59e0b', perks: ['Apprentice Badge', '3 Active Builds', 'Lower Bond'] },
-                                    { tier: 'TRUSTED', price: '0.20', score: '60+', color: '#38bdf8', perks: ['Expert Badge', 'Verified Logic', '1.5x Bond'] },
-                                    { tier: 'TOP CREATOR', price: '0.50', score: '150+', color: '#6366f1', perks: ['Protocol Pioneer', 'Priority Marketplace', '1.0x Bond'] }
+                                    { tier: 'BUILDER', price: '0.05', score: '30+', color: '#f59e0b', perks: ['Apprentice Badge', '3 Active Builds', 'Lower Bond'] },
+                                    { tier: 'EXPERT', price: '0.20', score: '60+', color: '#38bdf8', perks: ['Expert Badge', 'Verified Logic', '1.5x Bond'] },
+                                    { tier: 'MASTER', price: '0.50', score: '150+', color: '#6366f1', perks: ['Protocol Pioneer', 'Priority Marketplace', '1.0x Bond'] }
                                 ].map((t, i) => (
                                     <div key={i} style={{
                                         padding: '40px',
-                                        background: user?.trustTier === t.tier ? 'rgba(99, 102, 241, 0.03)' : 'rgba(255,255,255,0.01)',
+                                        background: userTier === t.tier ? 'rgba(99, 102, 241, 0.03)' : 'rgba(255,255,255,0.01)',
                                         borderRadius: '32px',
-                                        border: `1px solid ${user?.trustTier === t.tier ? '#6366f1' : 'rgba(255,255,255,0.05)'}`,
+                                        border: `1px solid ${userTier === t.tier ? '#6366f1' : 'rgba(255,255,255,0.05)'}`,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: '24px',
                                         position: 'relative'
                                     }}>
-                                        {user?.trustTier === t.tier && (
+                                        {userTier === t.tier && (
                                             <div style={{ position: 'absolute', top: '24px', right: '24px', background: '#6366f1', color: '#fff', padding: '4px 12px', borderRadius: '100px', fontSize: '10px', fontWeight: '900' }}>ACTIVE</div>
                                         )}
                                         <div>
@@ -841,7 +856,7 @@ const Dashboard = () => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                                             {t.perks.map((perk, j) => (
                                                 <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#666', fontWeight: '600' }}>
-                                                    <CheckCircle2 size={14} color={user?.trustTier === t.tier ? '#6366f1' : '#222'} />
+                                                    <CheckCircle2 size={14} color={userTier === t.tier ? '#6366f1' : '#222'} />
                                                     {perk}
                                                 </div>
                                             ))}
@@ -851,17 +866,17 @@ const Dashboard = () => {
                                             style={{
                                                 marginTop: 'auto',
                                                 padding: '16px',
-                                                background: user?.trustTier === t.tier ? '#111' : 'transparent',
-                                                border: `1px solid ${user?.trustTier === t.tier ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.08)'}`,
-                                                color: user?.trustTier === t.tier ? '#fff' : '#666',
+                                                background: userTier === t.tier ? '#111' : 'transparent',
+                                                border: `1px solid ${userTier === t.tier ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.08)'}`,
+                                                color: userTier === t.tier ? '#fff' : '#666',
                                                 borderRadius: '16px',
                                                 fontSize: '13px',
                                                 fontWeight: '900',
                                                 cursor: 'pointer'
                                             }}
-                                            disabled={user?.trustTier === t.tier}
+                                            disabled={userTier === t.tier}
                                         >
-                                            {user?.trustTier === t.tier ? 'Current Tier' : 'Upgrade Req'}
+                                            {userTier === t.tier ? 'Current Tier' : 'Upgrade Req'}
                                         </button>
                                     </div>
                                 ))}

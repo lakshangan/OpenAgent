@@ -38,6 +38,19 @@ const AdminDashboard = () => {
     const ADMIN_WALLET = '0x9527c9fd391ccd48f7278fe7c7c09b786a0bb832'.toLowerCase();
     const isAdmin = account && account.toLowerCase() === ADMIN_WALLET;
 
+    const normalizeTier = (tier) => {
+        const mapping = {
+            'CORE': 'STARTER',
+            'ACTIVE': 'BUILDER',
+            'RECOGNIZED': 'EXPERT',
+            'ELITE': 'MASTER',
+            'VERIFIED': 'BUILDER',
+            'TRUSTED': 'EXPERT',
+            'TOP CREATOR': 'MASTER'
+        };
+        return mapping[tier] || tier;
+    };
+
     useEffect(() => {
         if (isConnected && isAdmin) {
             fetchData();
@@ -227,7 +240,7 @@ const AdminDashboard = () => {
                                         <tr key={i}>
                                             <td style={{ fontWeight: 'bold', color: '#38bdf8' }}>{pa.name}</td>
                                             <td>@{pa.creator || pa.owner}</td>
-                                            <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>{pa.trustTier}</td>
+                                            <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>{normalizeTier(pa.trustTier)}</td>
                                             <td>
                                                 <button
                                                     style={{ background: '#10b981', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', marginRight: '8px', cursor: 'pointer' }}

@@ -61,6 +61,48 @@ class TrustEngine {
         return Config.GAMMA * totalUsageBoost;
     }
 
+    computeSocialBoost(user) {
+        if (!user.twitter || !user.twitter.username) return 0;
+        
+        let score = 5; // Connection base
+        if (user.twitter.isVerified) score += 25;
+        
+        // Account Age Bonus (Anti-Sybil)
+        if (user.twitter.createdAt) {
+            const ageYears = (new Date() - new Date(user.twitter.createdAt)) / (1000 * 60 * 60 * 24 * 365);
+            score += Math.min(15, ageYears * 3); // Max 15 points for 5 year old account
+        }
+
+        // Logarithmic follower boost
+        const followers = user.twitter.followerCount || 0;
+        score += Math.log10(followers + 1) * 3;
+        
+        return Config.DELTA * score;
+    }
+
+    computeTechnicalBoost(user) {
+        if (!user.github || !user.github.username) return 0;
+        
+        let score = 10; // Connection base
+
+        // Account Age Bonus (Anti-Sybil)
+        if (user.github.createdAt) {
+            const ageYears = (new Date() - new Date(user.github.createdAt)) / (1000 * 60 * 60 * 24 * 365);
+            score += Math.min(20, ageYears * 4); // Max 20 points for 5 year old account
+        }
+        
+        // GitHub specific weights
+        const repos = user.github.publicRepos || 0;
+        const followers = user.github.followers || 0;
+        const commits = user.github.totalContributions || 0;
+        
+        score += (Math.log10(repos + 1) * 5);
+        score += (Math.log10(followers + 1) * 2);
+        score += (Math.log10(commits + 1) * 8);
+        
+        return Config.EPSILON * score;
+    }
+
     // --- Public API ---
 
     async computeUserTrust(username) {
@@ -96,10 +138,21 @@ class TrustEngine {
         // 3. Agent Usage Boost
         const agentBoost = await this.computeAgentUsageBoost(username);
 
-        // 4. Decay
+        // 4. Social Boost
+        const socialBoost = this.computeSocialBoost(user);
+
+        // 5. Technical Boost
+        const techBoost = this.computeTechnicalBoost(user);
+
+        // 6. x402 Usage Boost (Anti-Wash Trading: Logarithmic growth)
+        // Diminishing returns after the first few inferences
+        const inferences = user.successful_inferences_30d || 0;
+        const x402Boost = Config.ZETA * (Math.log10(inferences + 1) * 15);
+
+        // 7. Decay
         const decay = this.computeDecay(user, visibleNow);
 
-        const finalH = h + contributionBoost + stakeBoost + agentBoost - decay;
+        const finalH = h + contributionBoost + stakeBoost + agentBoost + socialBoost + techBoost + x402Boost - decay;
         const finalScore = this.mappingHiddenToVisible(finalH);
 
         const tier = this.getTrustTier(finalScore);

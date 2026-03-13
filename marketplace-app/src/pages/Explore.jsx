@@ -10,7 +10,7 @@ const Explore = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('Recently Listed');
-    const [showExperimental, setShowExperimental] = useState(false);
+    const [showInitialization, setShowInitialization] = useState(false);
 
     const categories = useMemo(() => {
         // Use predefined domains as primary categories
@@ -109,14 +109,14 @@ const Explore = () => {
                             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
                                 <input
                                     type="checkbox"
-                                    checked={showExperimental}
+                                    checked={showInitialization}
                                     onChange={(e) => {
                                         const checked = e.target.checked;
-                                        setShowExperimental(checked);
+                                        setShowInitialization(checked);
                                         loadMarketplaceData(checked);
                                     }}
                                 />
-                                Show Experimental
+                                Show Alpha Build
                             </label>
                             <select
                                 className="sort-select"

@@ -60,7 +60,7 @@ const Home = () => {
                         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--brand-primary)' }}></div>
                         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Registry Snapshot</span>
                     </div>
-                    <h2 style={{ fontSize: '64px', fontWeight: '950', marginBottom: '24px', letterSpacing: '-0.06em', color: '#fff', lineHeight: '1.0' }}>Built by Builders. <br /> <span style={{ opacity: 0.3 }}>Verified by code.</span></h2>
+                    <h2 style={{ fontSize: '64px', fontWeight: '950', marginBottom: '24px', letterSpacing: '-0.06em', color: '#fff', lineHeight: '1.0' }}>Built by Builders. <br /> <span style={{ opacity: 0.3 }}>Authenticated by code.</span></h2>
                     <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto', fontSize: '20px', lineHeight: '1.6', fontWeight: '450' }}>
                         Browse the current census of {marketplaceAgents.length} independent AI agents ready for deployment.
                     </p>

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAgent | Buy & Sell AI Agents</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            /* Core Backgrounds */
+            --bg-base: #030303;
+            --bg-surface: rgba(255, 255, 255, 0.03);
+            --bg-surface-hover: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(10, 10, 12, 0.4);
+            
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(0, 255, 136, 0.2);
+            --border-purple: rgba(123, 97, 255, 0.2);
+
+            /* Brand Colors based on index.css tokens */
+            --brand-green: #00ff88;
+            --brand-green-rgb: 0, 255, 136;
+            --brand-purple: #7b61ff;
+            --brand-purple-rgb: 123, 97, 255;
+            
+            /* Text */
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
+
+            --ease-snappy: cubic-bezier(0.2, 1, 0.3, 1);
+            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(var(--brand-purple-rgb), 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(var(--brand-green-rgb), 0.05), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        /* Noise Texture */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; font-weight: 800; line-height: 1.1; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .container {
+            width: 100%;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s var(--ease-snappy);
+            cursor: pointer;
+        }
+
+        .btn-green {
+            background: var(--brand-green);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
+            background: #33ff9f;
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            background: rgba(3, 3, 3, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 1rem 0;
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Manrope', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--brand-green); }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+        }
+
+        /* Badges */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .pill .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--brand-green);
+            box-shadow: 0 0 10px var(--brand-green);
+        }
+
+        /* Hero */
+        .hero {
+            padding: 12rem 0 6rem;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(3.5rem, 6vw, 5.5rem);
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--brand-green), #fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p.lead {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        /* Isometric floating cards */
+        .hero-visual {
+            position: absolute;
+            right: 5%;
+            top: 25%;
+            width: 500px;
+            height: 500px;
+            perspective: 1000px;
+            pointer-events: none;
+        }
+
+        .float-card {
+            position: absolute;
+            background: rgba(20, 20, 25, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transform-style: preserve-3d;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.05);
+        }
+
+        .fc-1 { top: 0; left: 10%; transform: rotateX(20deg) rotateY(-20deg) rotateZ(5deg); animation: float 6s ease-in-out infinite; }
+        .fc-2 { top: 40%; left: 40%; transform: rotateX(15deg) rotateY(-15deg) rotateZ(-5deg); animation: float 8s ease-in-out infinite reverse; border-color: var(--border-purple); }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(20deg) rotateY(-20deg); }
+            50% { transform: translateY(-20px) rotateX(22deg) rotateY(-18deg); }
+        }
+
+        /* Marquee */
+        .marquee {
+            width: 100%;
+            background: var(--brand-green);
+            color: #000;
+            padding: 1rem 0;
+            overflow: hidden;
+            display: flex;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            transform: rotate(-1deg) scale(1.02);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .marquee-inner { display: flex; animation: slideLeft 20s linear infinite; }
+        .m-item { margin: 0 2rem; display: flex; align-items: center; gap: 0.5rem; }
+        @keyframes slideLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* Sections */
+        .section { padding: 8rem 0; position: relative; }
+        .section-header { margin-bottom: 4rem; max-width: 600px; }
+        .section-header h2 { font-size: 3rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        .section-header p { color: var(--text-secondary); font-size: 1.1rem; }
+
+        /* ================= PREMIUM ARCHITECTURE VISUAL ================= */
+        .arch-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 32px;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arch-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(var(--brand-purple-rgb), 0.15) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .arch-nodes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .node-card {
+            background: rgba(10, 10, 12, 0.7);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s var(--ease-snappy);
+            position: relative;
+        }
+
+        .node-card:hover {
+            border-color: rgba(var(--brand-green-rgb), 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .node-icon {
+            width: 64px; height: 64px;
+            margin: 0 auto 1.5rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--brand-green);
+        }
+
+        .node-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .node-card p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* Connecting SVG Lines */
+        .arch-svg {
+            position: absolute;
+            top: 50%; left: 0; width: 100%; height: 100px;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .path-line {
+            fill: none;
+            stroke: var(--border-subtle);
+            stroke-width: 2;
+            stroke-dasharray: 6 6;
+        }
+
+        .path-glow {
+            fill: none;
+            stroke: var(--brand-green);
+            stroke-width: 3;
+            filter: drop-shadow(0 0 8px var(--brand-green));
+            stroke-dasharray: 100;
+            stroke-dashoffset: 200;
+            animation: flowDash 3s linear infinite;
+        }
+
+        @keyframes flowDash { to { stroke-dashoffset: 0; } }
+
+        /* Terminals / Code */
+        .code-block {
+            background: #000;
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .c-kw { color: var(--brand-purple); }
+        .c-str { color: var(--brand-green); }
+        .c-fn { color: #fff; }
+        .c-cm { color: #666; }
+
+        /* ================= SOCIAL HUB ================= */
+        .social-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 1.5rem;
+            height: 550px;
+            margin-top: 3rem;
+        }
+
+        .hub-col {
+            background: rgba(10, 10, 12, 0.5);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .hub-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .hub-content {
+            padding: 1.25rem;
+            flex: 1;
+            overflow-y: hidden;
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+
+        .chat-msg { font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); }
+        .chat-user { font-weight: 700; color: var(--text-primary); margin-right: 0.4rem; }
+        
+        .agent-post {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .post-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .post-author { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; }
+
+        .l-card { display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.9rem; padding: 0.8rem 0; border-bottom: 1px dashed var(--border-subtle); }
+        .l-card:last-child { border: none; }
+
+        /* ================= ECONOMICS & ROADMAP ================= */
+        .eco-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .eco-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.3s;
+        }
+        .eco-card:hover { border-color: rgba(var(--brand-green-rgb), 0.3); transform: translateY(-5px); }
+
+        .rm-bento {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        .rm-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 2.5rem;
+            display: flex; flex-direction: column;
+            transition: all 0.3s;
+        }
+        .rm-card:hover { border-color: rgba(var(--brand-purple-rgb), 0.3); transform: translateY(-3px); }
+
+        .rm-span-8 { grid-column: span 8; }
+        .rm-span-4 { grid-column: span 4; }
+        
+        .rm-tag { display: inline-block; font-size: 0.75rem; font-family: 'JetBrains Mono'; padding: 0.3rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-subtle); margin-bottom: 1rem; font-weight: 600; width: max-content; }
+        .rm-d-done { border-color: rgba(var(--brand-green-rgb), 0.3); color: var(--brand-green); background: rgba(var(--brand-green-rgb), 0.05); }
+        .rm-d-live { border-color: rgba(var(--brand-purple-rgb), 0.3); color: var(--brand-purple); background: rgba(var(--brand-purple-rgb), 0.05); }
+
+        @media (max-width: 900px) {
+            .social-layout { grid-template-columns: 1fr; height: auto; }
+            .eco-grid { grid-template-columns: 1fr; }
+            .rm-span-8, .rm-span-4 { grid-column: span 12; }
+        }
+
+        /* ================= NEW TRUST ENGINE DESIGN ================= */
+        .trust-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .vault-graphic {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+        }
+
+        .vault-circle {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px dashed rgba(var(--brand-purple-rgb), 0.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .v-1 { width: 100%; height: 100%; animation: spin 20s linear infinite; }
+        .v-2 { width: 75%; height: 75%; border: 1px solid rgba(var(--brand-green-rgb), 0.2); animation: spin 15s linear infinite reverse; }
+        .v-3 { 
+            width: 50%; height: 50%; 
+            background: rgba(0,0,0,0.8);
+            border: 2px solid var(--brand-green);
+            box-shadow: 0 0 40px rgba(var(--brand-green-rgb), 0.2);
+            z-index: 10;
+            flex-direction: column;
+        }
+
+        .v-3 i { color: var(--brand-green); margin-bottom: 0.5rem; }
+        .v-time { font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1.5rem; color: #fff; }
+        .v-label { font-size: 0.8rem; color: var(--brand-green); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        .trust-feature {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .tf-icon {
+            width: 48px; height: 48px; flex-shrink: 0;
+            border-radius: 12px;
+            background: rgba(var(--brand-purple-rgb), 0.1);
+            border: 1px solid rgba(var(--brand-purple-rgb), 0.3);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--brand-purple);
+        }
+        .trust-feature h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .trust-feature p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* ================= FORUM / CARDS ================= */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .agent-card {
+            background: rgba(15, 15, 18, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .agent-card:hover {
+            background: rgba(25, 25, 30, 0.6);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-4px);
+        }
+
+        .ac-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .ac-avatar { width: 40px; height: 40px; border-radius: 10px; background: #222; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .ac-trust { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--brand-green); background: rgba(var(--brand-green-rgb), 0.1); padding: 0.2rem 0.6rem; border-radius: 4px; }
+        .ac-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .ac-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.5rem; }
+        .ac-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 1rem; }
+        .ac-price { font-family: 'JetBrains Mono'; font-weight: 700; }
+
+        /* ================= GROWTH DATA ================= */
+        .data-bento {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .d-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 2.5rem;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .span-8 { grid-column: span 8; }
+        .span-4 { grid-column: span 4; }
+
+        .d-val { font-family: 'JetBrains Mono'; font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
+        .d-label { color: var(--text-secondary); font-size: 1rem; }
+        .c-green { color: var(--brand-green); }
+        .c-purple { color: var(--brand-purple); }
+
+        .sdk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+
+        @media (max-width: 900px) {
+            .span-8, .span-4, .arch-nodes, .trust-showcase { grid-template-columns: 1fr; grid-column: span 12; }
+            .hero-visual { display: none; }
+            .arch-svg { display: none; }
+
+            /* Mobile Spacing & Layout */
+            .section { padding: 4rem 0 !important; }
+            .section-header { margin-bottom: 2.5rem !important; }
+            .section-header h2 { font-size: 2.2rem !important; }
+            
+            /* Responsive Hero */
+            .hero { padding: 8rem 0 4rem !important; text-align: center; }
+            .hero h1 { font-size: 2.8rem !important; }
+            .hero p.lead { margin: 0 auto 2rem !important; font-size: 1.1rem; }
+            .hero > .container > div[style*="display: flex"] { flex-direction: column !important; width: 100%; gap: 1rem !important; }
+            .hero .btn { width: 100%; justify-content: center; }
+            
+            /* Vertical Architecture Diagram for Mobile */
+            .arch-container { padding: 3rem 1.5rem !important; }
+            .arch-nodes { position: relative; gap: 3rem !important; }
+            .arch-nodes::before {
+                content: ''; position: absolute; top: 0; left: 50%;
+                width: 2px; height: 100%; 
+                background: linear-gradient(to bottom, transparent, var(--brand-green), var(--brand-purple), transparent);
+                transform: translateX(-50%); z-index: 0; opacity: 0.5;
+            }
+            .node-card { margin-top: 0 !important; z-index: 2; }
+            
+            /* Trust & SDK adjustments */
+            .trust-showcase h2 { font-size: 2.2rem !important; }
+            .vault-graphic { width: 80% !important; margin: 2rem auto 0 !important; padding-bottom: 80% !important; }
+            .sdk-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+        }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem; margin-top: 4rem; }
+        .foot-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 2rem; }
+        .foot-links a { color: var(--text-secondary); margin-left: 1.5rem; text-decoration: none; font-size: 0.9rem; }
+        .foot-links a:hover { color: #fff; }
+
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="#" class="logo">
+                <i data-lucide="cpu" style="color: var(--brand-green);"></i> OpenAgent
+            </a>
+            <div class="nav-links">
+                <a href="#architecture">Architecture</a>
+                <a href="#trust">Trust Engine</a>
+                <a href="#forum">Social Hub</a>
+            </div>
+            <div>
+                <a href="marketplace-app/index.html" class="btn btn-green">Launch App</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <div class="pill">
+                <div class="dot"></div> Live on Base Mainnet
+            </div>
+            <h1>Agents that actually work.<br><span>No fluff, just code.</span></h1>
+            <p class="lead">OpenAgent is the layer where AI meets crypto. Deploy, verify, and acquire autonomous agents securely. No middlemen, no 30% cuts—just pure on-chain reality.</p>
+            
+            <div style="display: flex; gap: 1rem;">
+                <a href="marketplace-app/index.html" class="btn btn-green"><i data-lucide="shopping-cart" size="18"></i> Enter Marketplace</a>
+                <a href="#architecture" class="btn btn-outline">Read the docs</a>
+            </div>
+
+            <div class="hero-visual">
+                <div class="float-card fc-1">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem;">
+                        <span class="mono" style="color:var(--brand-green);">Deploy.exe</span>
+                        <i data-lucide="zap" size="18" style="color:#fff;"></i>
+                    </div>
+                    <div class="mono" style="font-size:0.8rem; color:var(--text-secondary); opacity:0.8;">
+                        > wrapping_model_weights...<br>
+                        > generating_zk_proof...<br>
+                        > 10k USDC bond staked.
+                    </div>
+                </div>
+                <div class="float-card fc-2">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem;">
+                        <span class="mono" style="color:var(--brand-purple);">Verify.sh</span>
+                        <i data-lucide="shield-check" size="18" style="color:#fff;"></i>
+                    </div>
+                    <div class="mono" style="font-size:0.8rem; color:var(--text-secondary); opacity:0.8;">
+                        > hash: 0x8a9F...b12C<br>
+                        > signature_match: YES<br>
+                        > status: trust_verified
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee">
+        <div class="marquee-inner">
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> 72H ATOMIC ESCROW</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> CHECKSUM VERIFICATION</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> 100% PROTOCOL INTEGRITY</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> TRUST LEVELS</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> ON-CHAIN SETTLEMENT</div>
+            <!-- Duplicate for infinite loop -->
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> 72H ATOMIC ESCROW</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> CHECKSUM VERIFICATION</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> 100% PROTOCOL INTEGRITY</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> TRUST LEVELS</div>
+            <div class="m-item"><i data-lucide="check-circle" size="18"></i> ON-CHAIN SETTLEMENT</div>
+        </div>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="architecture">
+        <div class="container">
+            <div class="section-header">
+                <h2>How we route the grid.</h2>
+                <p>A flawless pipeline from deploy to execution. Our smart contracts handle the heavy lifting so you don't have to trust anyone.</p>
+            </div>
+
+            <div class="arch-container">
+                <div class="arch-bg-glow"></div>
+                
+                <svg class="arch-svg" viewBox="0 0 1000 100" preserveAspectRatio="none">
+                    <path class="path-line" d="M 16% 50 L 50% 50 L 84% 50"></path>
+                    <path class="path-glow" d="M 16% 50 L 50% 50 L 84% 50"></path>
+                </svg>
+
+                <div class="arch-nodes">
+                    <div class="node-card">
+                        <div class="node-icon"><i data-lucide="terminal" size="28"></i></div>
+                        <h3>01. Push Code</h3>
+                        <p>Builders deploy agents using our SDK. Neural weights are pinned to IPFS and signed on-chain.</p>
+                    </div>
+                    <div class="node-card" style="margin-top: 4rem;">
+                        <div class="node-icon" style="color:var(--brand-purple); border-color:rgba(123,97,255,0.3); background:rgba(123,97,255,0.05);"><i data-lucide="cpu" size="28"></i></div>
+                        <h3>02. Trust Engine Runs</h3>
+                        <p>Our indexers compute the SHA-256 checksums and assign trust scores based on builder staking.</p>
+                    </div>
+                    <div class="node-card">
+                        <div class="node-icon" style="color:#3b82f6; border-color:rgba(59,130,246,0.3); background:rgba(59,130,246,0.05);"><i data-lucide="wallet" size="28"></i></div>
+                        <h3>03. Atomic Swap</h3>
+                        <p>Collectors acquire the agent. Ownership transfers instantly while funds route to the 72H escrow vault.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SDK SECTION -->
+    <section class="section">
+        <div class="container">
+            <div class="sdk-grid">
+                <div>
+                    <h2 style="font-size: 3rem; margin-bottom: 1.5rem; letter-spacing: -0.02em;">3 lines of code.</h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem;">Stop wrestling with raw smart contracts. The OpenAgent SDK lets you wrap your models in a cryptographic proof and deploy them directly to Base in seconds.</p>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; color: var(--text-primary); font-weight: 500;">
+                        <li style="display: flex; align-items: center; gap: 1rem;"><i data-lucide="check" style="color: var(--brand-green);"></i> Automatic ABI generation</li>
+                        <li style="display: flex; align-items: center; gap: 1rem;"><i data-lucide="check" style="color: var(--brand-green);"></i> ZK-Proof wrapping for ML weights</li>
+                        <li style="display: flex; align-items: center; gap: 1rem;"><i data-lucide="check" style="color: var(--brand-green);"></i> Native IPFS pinning built-in</li>
+                    </ul>
+                </div>
+                
+                <div class="code-block sdk-block">
+                    <div style="display: flex; gap: 8px; margin-bottom: 1.5rem;">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></div>
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></div>
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f;"></div>
+                    </div>
+                    <div><span class="c-kw">import</span> { OpenAgentClient } <span class="c-kw">from</span> <span class="c-str">'@openagent/sdk'</span>;</div>
+                    <br>
+                    <div><span class="c-kw">const</span> protocol = <span class="c-kw">new</span> OpenAgentClient({</div>
+                    <div>&nbsp;&nbsp;network: <span class="c-str">'base-mainnet'</span>,</div>
+                    <div>&nbsp;&nbsp;privateKey: process.env.PK</div>
+                    <div>});</div>
+                    <br>
+                    <div class="c-cm">// Deploy agent with a 10k USDC staked bond</div>
+                    <div><span class="c-kw">await</span> protocol.<span class="c-fn">deployAgent</span>({</div>
+                    <div>&nbsp;&nbsp;modelPath: <span class="c-str">'./quant_v5.pt'</span>,</div>
+                    <div>&nbsp;&nbsp;baseToken: <span class="c-str">'USDC'</span>,</div>
+                    <div>&nbsp;&nbsp;bond: <span class="c-str">'10000.0'</span>, <span class="c-cm">// Yield-Bearing</span></div>
+                    <div>&nbsp;&nbsp;escrow: <span class="c-str">'72H_ATOMIC'</span></div>
+                    <div>});</div>
+                    <br>
+                    <div style="color: var(--brand-green);">> Success: Agent deployed to Base (0x9f3b...e2a9)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUST ENGINE -->
+    <section class="section" id="trust">
+        <div class="container">
+            <div class="trust-showcase">
+                <div>
+                    <div class="pill" style="margin-bottom: 1.5rem;">
+                        <div class="dot" style="background: var(--brand-purple); box-shadow: 0 0 10px var(--brand-purple);"></div> The New Standard
+                    </div>
+                    <h2 style="font-size: 3.2rem; margin-bottom: 1.5rem; letter-spacing:-0.02em;">Status is <br><span style="color: var(--brand-green);">earned.</span></h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 3rem;">The OpenAgent Trust Score isn't a vanity metric—it's the most prestigious status symbol in Web3. It recognizes flawless code execution and significant capital commitment. You don't just get a high score; you achieve it through excellence.</p>
+
+                    <div class="trust-feature">
+                        <div class="tf-icon"><i data-lucide="flame" size="24"></i></div>
+                        <div>
+                            <h4>Forged in the 72H Vault</h4>
+                            <p>Every deployment begins a 72-hour atomic initialization. Flawless execution raises your rank. Transparent dispute resolution ensures that every agent maintains the highest standards of the collective.</p>
+                        </div>
+                    </div>
+
+                    <div class="trust-feature">
+                        <div class="tf-icon" style="color:var(--brand-green); border-color:rgba(0,255,136,0.3); background:rgba(0,255,136,0.05);"><i data-lucide="shield-alert" size="24"></i></div>
+                        <div>
+                            <h4>The Industry Standard</h4>
+                            <p>Collectors don't just buy code; they buy reputation. Elite nodes with Tier 1 trust command premium liquidity. If your architecture isn't bulletproof, you won't survive the vault.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vault-graphic">
+                    <div class="vault-circle v-1"></div>
+                    <div class="vault-circle v-2"></div>
+                    <div class="vault-circle v-3">
+                        <i data-lucide="shield-check" size="32"></i>
+                        <div class="v-time">71:59:58</div>
+                        <div class="v-label">Escrow Locked</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOCIAL HUB -->
+    <section class="section" id="forum">
+        <div class="container">
+            <div class="section-header" style="max-width: none;">
+                <h2>Where builders earn reputation.</h2>
+                <p>A living forum where code is scrutinized, questions are answered, and trust is earned in public before anyone buys.</p>
+            </div>
+
+            <div class="social-layout">
+                <!-- Global Chat -->
+                <div class="hub-col">
+                    <div class="hub-header">
+                        <span><i data-lucide="globe" size="14" style="color:var(--brand-green); margin-right:6px;"></i> Global Feed</span>
+                        <div style="width:8px; height:8px; background:var(--brand-green); border-radius:50%; box-shadow:0 0 10px var(--brand-green);"></div>
+                    </div>
+                    <div class="hub-content">
+                        <div class="chat-msg"><span class="chat-user">0xApollo</span> Just wrapped my Arbitrage bot in a ZK proof. OpenAgent SDK is too clean.</div>
+                        <div class="chat-msg"><span class="chat-user">SatoshiFan</span> Testing the new vision agents. Checksum verification passed instantly.</div>
+                        <div class="chat-msg"><span class="chat-user" style="color:var(--brand-purple);">VC_Node9</span> Watching @DataMancer's trust tier. Zero disputes in 6 months.</div>
+                        <div class="chat-msg"><span class="chat-user">CodeGlitcher</span> Base L2 fees practically zero. Escrow locks faster than mainnet.</div>
+                    </div>
+                </div>
+
+                <!-- Feed -->
+                <div class="hub-col">
+                    <div class="hub-header">Elite Deployments</div>
+                    <div class="hub-content">
+                        <div class="agent-post">
+                            <div class="post-head">
+                                <div class="post-author">
+                                    <div style="width:32px; height:32px; border-radius:8px; background:#fff; color:#000; display:flex; align-items:center; justify-content:center;">N</div>
+                                    Neural_Nomad <i data-lucide="check-circle" size="14" style="color:var(--brand-green);"></i>
+                                </div>
+                                <div class="mono" style="font-size:0.75rem; color:var(--brand-green); border:1px solid rgba(0,255,136,0.2); padding:2px 6px; border-radius:4px;">TRUST 285</div>
+                            </div>
+                            <div style="font-size:0.95rem; color:var(--text-secondary); margin-bottom:1rem;">
+                                Just pushed 'QuantBot v5' to the execution mempool. Pinned the model weights to IPFS and staking a 10k USDC bond to prove execution validity. Looking for early liquidity providers. 🌐📈
+                            </div>
+                            <div class="code-block" style="padding:1rem;">
+                                $ openagent deploy ./quant_v5 --asset USDC<br>
+                                > Hashing: 0x9f...e2a<br>
+                                > Escrow: 10,000 USDC Locked
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="hub-col">
+                    <div class="hub-header">Market Movers</div>
+                    <div class="hub-content">
+                        <div class="l-card">
+                            <div>
+                                <div style="font-weight:700;">#1 Framework_Fund</div>
+                                <div class="mono" style="font-size:0.75rem; color:var(--brand-purple); margin-top:4px;">INSTITUTIONAL</div>
+                            </div>
+                            <div class="mono c-green">+$450k Vol</div>
+                        </div>
+                        <div class="l-card">
+                            <div>
+                                <div style="font-weight:700;">#2 Neural_Nomad</div>
+                                <div class="mono" style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">TRUST 285</div>
+                            </div>
+                            <div class="mono" style="color:var(--text-secondary);">5 Deploys</div>
+                        </div>
+                        <div class="l-card">
+                            <div>
+                                <div style="font-weight:700;">#3 DataMancer</div>
+                                <div class="mono" style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">TRUST 260</div>
+                            </div>
+                            <div class="mono" style="color:var(--text-secondary);">0 Defaults</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DATA / GROWTH -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header" style="max-width: none; text-align: center;">
+                <h2>We don't hide the numbers.</h2>
+                <p>Pure on-chain reality. Everything is verifiable.</p>
+            </div>
+
+            <div class="data-bento">
+                <div class="d-box span-8">
+                    <div class="d-val c-green">$5.2M</div>
+                    <div class="d-label">Total Volume Settled (Testnet)</div>
+                </div>
+                <div class="d-box span-4">
+                    <div class="d-val">100%</div>
+                    <div class="d-label">Protocol Integrity</div>
+                </div>
+                <div class="d-box span-4">
+                    <div class="d-val c-purple">2.5%</div>
+                    <div class="d-label">Flat Protocol Fee</div>
+                </div>
+                <div class="d-box span-8">
+                    <div class="d-val">12,405</div>
+                    <div class="d-label">Verified Agents Deployed</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ECONOMICS -->
+    <section class="section" style="border-top: 1px solid var(--border-subtle);">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin: 0 auto;">
+                <h2>Fair Economics.</h2>
+                <p>Built to align builders and collectors. Optimized fees, network safety, and verifiable code.</p>
+            </div>
+
+            <div class="eco-grid">
+                <div class="eco-card">
+                    <i data-lucide="percent" size="32" style="color: var(--brand-purple); margin-bottom: 1rem;"></i>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">2.5% Flat Fee</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">A simple 2.5% fee on sales and subscriptions. Forget the 30% "store tax." Funds settle directly to you.</p>
+                </div>
+                <div class="eco-card">
+                    <i data-lucide="clock" size="32" style="color: var(--brand-green); margin-bottom: 1rem;"></i>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">72h Atomic Window</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Acquisitions lock funds for a 72-hour verification window. Open a dispute if the code doesn't execute as promised.</p>
+                </div>
+                <div class="eco-card">
+                    <i data-lucide="coins" size="32" style="color: #fff; margin-bottom: 1rem;"></i>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Yield-Bearing Bonds</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Don't lock dead capital. Stake USDC or stETH as your builder bond and earn native yield while your agent scales.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Product Roadmap.</h2>
+                <p>A phased rollout from testnet to mainnet. Every milestone is scoped, measured, and publicly tracked.</p>
+            </div>
+
+            <div class="rm-bento">
+                <div class="rm-card rm-span-8">
+                    <div class="rm-tag rm-d-done">COMPLETED // Q2 2026</div>
+                    <h3 style="font-size: 1.8rem; margin-bottom: 0.8rem;">Cross-Chain Integrations</h3>
+                    <p style="color: var(--text-secondary);">Deep integration with Ethereum Mainnet and major L2s ensures escrow pools have broad liquidity access from day one.</p>
+                </div>
+                
+                <div class="rm-card rm-span-4" style="border-color: rgba(123,97,255,0.4);">
+                    <div class="rm-tag rm-d-live">CURRENT // Q3 2026</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.8rem;">Alpha Testnet</h3>
+                    <p style="color: var(--text-secondary);">The Trust Engine is live. Early partners are stress-testing escrow flows and dispute resolution.</p>
+                </div>
+
+                <div class="rm-card rm-span-4">
+                    <div class="rm-tag">UPCOMING // Q4 2026</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.8rem;">Mainnet Launch</h3>
+                    <p style="color: var(--text-secondary);">Full production deployment on Base L2. 72-hour atomic escrows naturally go live.</p>
+                </div>
+
+                <div class="rm-card rm-span-8">
+                    <div class="rm-tag">HORIZON // Q1 2027</div>
+                    <h3 style="font-size: 1.8rem; margin-bottom: 0.8rem;">Governance Activation</h3>
+                    <p style="color: var(--text-secondary);">Governance and fee routing live. Protocol parameters evolve with community input while keeping trust intact.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section" style="border-top: 1px solid var(--border-subtle); background: radial-gradient(circle at top, rgba(0,255,136,0.05), transparent 70%);">
+        <div class="container" style="text-align: center;">
+            <h2 style="font-size: 4rem; margin-bottom: 1.5rem;">Plug into the layer.</h2>
+            <p style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">Stop paying 30% taxes to walled gardens. Deploy your next autonomous agent on Base today.</p>
+            <a href="marketplace-app/index.html" class="btn btn-green" style="padding: 1.2rem 3rem; font-size: 1.1rem;"><i data-lucide="arrow-right"></i> Boot Sequence</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="foot-flex">
+                <div class="logo">
+                    <i data-lucide="cpu" style="color: var(--brand-green);"></i> OpenAgent
+                </div>
+                <div class="foot-links">
+                    <a href="#">X / Twitter</a>
+                    <a href="#">GitHub</a>
+                    <a href="#">Docs</a>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem;">
+                <span>&copy; 2026 OpenAgent Protocol.</span>
+                <span>Constructed for the vanguard.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        gsap.registerPlugin(ScrollTrigger);
+
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            // Hero Only (Removed ScrollTriggers below the fold to ensure content is fully visible on mobile & rapid scroll)
+            gsap.from('.hero h1', { y: 30, opacity: 0, duration: 1, ease: 'power3.out' });
+            gsap.from('.hero p', { y: 20, opacity: 0, duration: 1, delay: 0.2, ease: 'power3.out' });
+            gsap.from('.hero .btn', { y: 20, opacity: 0, duration: 1, stagger: 0.1, delay: 0.4, ease: 'power3.out' });
+            gsap.from('.hero-visual', { scale: 0.8, opacity: 0, duration: 1.5, delay: 0.3, ease: 'back.out(1.2)' });
+        }
+    </script>
+</body>
+</html>

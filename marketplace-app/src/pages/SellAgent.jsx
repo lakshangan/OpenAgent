@@ -18,19 +18,19 @@ const SellAgent = () => {
     const navigate = useNavigate();
 
     const getTrustTier = (score) => {
-        if (score >= 150) return 'TOP CREATOR';
-        if (score >= 60) return 'TRUSTED';
-        if (score >= 30) return 'VERIFIED';
+        if (score >= 150) return 'MASTER';
+        if (score >= 60) return 'EXPERT';
+        if (score >= 30) return 'BUILDER';
         return 'STARTER';
     };
 
     const tier = getTrustTier(trustScore || 0);
 
     let bondText = "";
-    if (tier === 'STARTER') bondText = "Welcome to the network. Your listing will be TRUSTED before being visible. Bond: 5x";
-    else if (tier === 'VERIFIED') bondText = "Your listing will go through review before going live. Bond required: 3x";
-    else if (tier === 'TRUSTED') bondText = "Bond required: 2x";
-    else if (tier === 'TOP CREATOR') bondText = "Bond required: 1x";
+    if (tier === 'STARTER') bondText = "Welcome to the network. Your listing will be EXPERT before being visible. Bond: 5x";
+    else if (tier === 'BUILDER') bondText = "Your listing will go through review before going live. Bond required: 3x";
+    else if (tier === 'EXPERT') bondText = "Bond required: 2x";
+    else if (tier === 'MASTER') bondText = "Bond required: 1x";
 
     const [formData, setFormData] = useState({
         name: '',

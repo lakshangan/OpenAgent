@@ -15,6 +15,19 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'ht
 
 const AgentDetails = () => {
     const { id } = useParams();
+
+    const normalizeTier = (tier) => {
+        const mapping = {
+            'CORE': 'STARTER',
+            'ACTIVE': 'BUILDER',
+            'RECOGNIZED': 'EXPERT',
+            'ELITE': 'MASTER',
+            'VERIFIED': 'BUILDER',
+            'TRUSTED': 'EXPERT',
+            'TOP CREATOR': 'MASTER'
+        };
+        return mapping[tier] || tier;
+    };
     const { marketplaceAgents: agents = [], isConnected, account, username, buyAgent, deleteAgent, openDispute, subscribeToAgent, extendAgentSubscription, rawPurchases = [], purchasedAgents = [] } = useWallet();
     const [isPurchasing, setIsPurchasing] = useState(false);
     const [isDelisting, setIsDelisting] = useState(false);
@@ -165,7 +178,7 @@ const AgentDetails = () => {
                                     <div className="identity-text">
                                         <div className="tier-label">
                                             <Award size={12} />
-                                            <span>{agent.trustTier || 'VERIFIED'} PROTOCOL</span>
+                                            <span>{normalizeTier(agent.trustTier || 'BUILDER')} PROTOCOL</span>
                                         </div>
                                         <h1 className="agent-display-title">{agent.name}</h1>
                                         {agent.tagline && <p className="agent-tagline">{agent.tagline}</p>}
@@ -487,7 +500,7 @@ const AgentDetails = () => {
                                 <div className="verified-status">
                                     <ShieldCheck size={20} color="#00ff88" />
                                     <div className="status-text">
-                                        <span className="main">SECURE_REGISTRY_VERIFIED</span>
+                                        <span className="main">SECURE_REGISTRY_AUTHENTICATED</span>
                                         <span className="sub">On-chain identity confirmed by protocol</span>
                                     </div>
                                 </div>

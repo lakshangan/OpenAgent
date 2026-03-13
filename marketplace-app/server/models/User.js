@@ -17,7 +17,26 @@ const userSchema = new mongoose.Schema({
     daily_posts_date: String,
     daily_posts_count: { type: Number, default: 0 },
     trustScore: { type: Number, default: 10 },
-    trustTier: { type: String, default: 'RESTRICTED' }
+    trustTier: { type: String, default: 'RESTRICTED' },
+    
+    // Social / Identity Verification
+    twitter: {
+        username: String,
+        isVerified: { type: Boolean, default: false },
+        followerCount: { type: Number, default: 0 },
+        connectedAt: Date,
+        createdAt: Date // Original account creation date from X
+    },
+    github: {
+        username: String,
+        publicRepos: { type: Number, default: 0 },
+        followers: { type: Number, default: 0 },
+        totalContributions: { type: Number, default: 0 },
+        connectedAt: Date,
+        createdAt: Date // Original GitHub account creation date
+    },
+    // Inference Usage
+    successful_inferences_30d: { type: Number, default: 0 }
 }, { collection: 'users' });
 
 module.exports = mongoose.model('User', userSchema);

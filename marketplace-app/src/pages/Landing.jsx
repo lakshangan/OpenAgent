@@ -253,9 +253,9 @@ const Landing = () => {
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '9px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.05em' }}>
                                 <span>STARTER</span>
-                                <span>VERIFIED</span>
-                                <span>TRUSTED</span>
-                                <span>TOP CREATOR</span>
+                                <span>BUILDER</span>
+                                <span>EXPERT</span>
+                                <span>MASTER</span>
                             </div>
                         </div>
                     </div>
